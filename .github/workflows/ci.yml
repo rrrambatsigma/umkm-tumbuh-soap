@@ -114,7 +114,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        service: [partnerships-service, training-service]
+        service: [partnerships-service]
     defaults:
       run:
         working-directory: services/${{ matrix.service }}

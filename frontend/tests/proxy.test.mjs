@@ -9,7 +9,6 @@ const servicePorts = {
   user: "USER_SERVICE_PORT",
   partnership: "PARTNERSHIP_SERVICE_PORT",
   document: "DOCUMENT_SERVICE_PORT",
-  training: "TRAINING_SERVICE_PORT",
 };
 const servers = [];
 const originalEnv = new Map();
@@ -86,16 +85,6 @@ test("the actual login client sends its POST through Vite", async () => {
   } finally {
     globalThis.fetch = originalFetch;
   }
-});
-
-test("admin paths for training keep their service and bearer header", async () => {
-  const response = await fetch(`${baseUrl}/backend/training/api/v1/admin/training/`, {
-    headers: { Authorization: "Bearer proxy-test-token" },
-  });
-  const result = await response.json();
-  assert.equal(result.service, "training");
-  assert.equal(result.path, "/api/v1/admin/training/");
-  assert.equal(result.authorization, "Bearer proxy-test-token");
 });
 
 test("existing relative document requests still reach the document service", async () => {

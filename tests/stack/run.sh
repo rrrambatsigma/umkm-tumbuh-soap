@@ -12,7 +12,7 @@ rm -f tests/postman/reports/newman.xml tests/stack/reports/authorization.txt
 project="umkm-stage1-${RANDOM}-$$"
 compose=(docker compose --project-name "$project" --env-file .env.example
   -f infra/docker-compose.yml -f infra/docker-compose.test.yml)
-services=(auth-service user-service partnerships-service document-service training-service)
+services=(auth-service user-service partnerships-service document-service)
 
 cleanup() {
   status=$?

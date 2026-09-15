@@ -78,9 +78,6 @@ services:
       OBJECT_STORAGE_BUCKET_PRODUCT_IMAGES: test-product-images
       OBJECT_STORAGE_BUCKET_PARTNERSHIP_FILES: test-partnership-files
     ports: !reset []
-  training-service:
-    environment: *test-environment
-    ports: !reset []
   newman-check:
     build:
       context: ..

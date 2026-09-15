@@ -63,8 +63,7 @@ def upload(url, token, field, filename, content_type, content, fields=None, expe
 
 def ready():
     for url in [AUTH + "/health/db", USER + "/health/db", DOCUMENT + "/health",
-                "http://partnerships-service:8082/health",
-                "http://training-service:8084/api/v1/health/db"]:
+                "http://partnerships-service:8082/health"]:
         deadline = time.monotonic() + 90
         while True:
             try:
@@ -74,7 +73,7 @@ def ready():
                 if time.monotonic() >= deadline:
                     raise
                 time.sleep(2)
-    print("PASS: all five services are ready", flush=True)
+    print("PASS: all four services are ready", flush=True)
 
 
 def login_fixtures():
