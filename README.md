@@ -2,7 +2,7 @@
 
 **English** | [Bahasa Indonesia](README.id.md)
 
-A platform for managing micro, small, and medium enterprises (UMKM), partner collaboration, training, documents, and business dashboards. The frontend uses React and TypeScript; five Go services share a PostgreSQL database. Garage provides S3-compatible storage, and Mailpit receives development email.
+A platform for managing micro, small, and medium enterprises (UMKM), partner collaboration, documents, and business dashboards. The frontend uses React and TypeScript; four Go services share a PostgreSQL database. Garage provides S3-compatible storage, and Mailpit receives development email.
 
 ## Run locally
 
@@ -36,10 +36,9 @@ See the [local development guide](docs/README_LOCAL_DEV.md) for environment vari
 | --- | --- | --- |
 | Frontend | http://localhost:5173 | React application |
 | Auth service | http://localhost:8080/api/v1 | Authentication and admin API |
-| User service | http://localhost:8081/api/v1 | Profiles, products, sales, and dashboards |
+| User service | http://localhost:8081/api/v1 | Profiles and dashboards |
 | Partnerships service | http://localhost:8082/api/v1 | Partnership requests and collaboration |
 | Document service | http://localhost:8083/api/v1 | Document uploads and downloads |
-| Training service | http://localhost:8084/api/v1 | Training, enrollment, and certificates |
 | PostgreSQL | localhost:5432 | Shared database |
 | Garage | http://localhost:3900 / http://localhost:3903 | S3 API / admin API |
 | Mailpit | http://localhost:8025 | Development email inbox; SMTP uses port 1025 |
@@ -52,10 +51,9 @@ Published backend ports bind to `127.0.0.1` by default. Change host ports in the
 | --- | --- |
 | [frontend/](frontend/) | React 18, TypeScript, Vite, Tailwind CSS, and feature modules |
 | [services/auth-service/](services/auth-service/) | Account authentication and admin operations |
-| [services/user-service/](services/user-service/) | Profiles, products, sales, and dashboards |
+| [services/user-service/](services/user-service/) | Profiles and dashboards |
 | [services/partnerships-service/](services/partnerships-service/) | Partnership API |
 | [services/document-service/](services/document-service/) | File API backed by Garage |
-| [services/training-service/](services/training-service/) | Training and certificates |
 | [infra/db/migrations/](infra/db/migrations/) | Shared PostgreSQL schema and reference data |
 | [infra/garage/](infra/garage/) | Garage configuration and bootstrap |
 | [tests/stack/](tests/stack/) | Isolated Stage 1 integration checks and fixtures |
@@ -69,7 +67,7 @@ Docker builds use Go 1.26.3. PostgreSQL uses version 16, and Garage is pinned to
 bash tests/stack/run.sh
 ```
 
-This builds a separate test project with six fixture accounts and one account registered by Newman, runs the 37-request API collection, checks all five APIs, uploads and downloads files through both storage consumers, reruns migrations and bootstrap, and recreates the containers to verify persistent data. It uses `.env.example` and the test overlay, publishes no host ports, and cleans up its test containers and volumes.
+This builds a separate test project with six fixture accounts and one account registered by Newman, runs the API collection, checks all four services, uploads and downloads files through storage, reruns migrations and bootstrap, and recreates the containers to verify persistent data. It uses `.env.example` and the test overlay, publishes no host ports, and cleans up its test containers and volumes.
 
 During the wrong-database check, this error is expected:
 
@@ -124,7 +122,6 @@ The optional large CSV seed replaces application data. It is unnecessary for sta
 | Stage 2 authorization | [Read](docs/README_AUTHORIZATION.md) | [Baca](docs/README_AUTHORIZATION.id.md) |
 | Frontend | [Read](frontend/README.md) | [Baca](frontend/README.id.md) |
 | Database | [Read](infra/db/README.md) | [Baca](infra/db/README.id.md) |
-| Training service | [Read](services/training-service/README.md) | [Baca](services/training-service/README.id.md) |
 | Postman/Newman | [Read](tests/postman/README.md) | [Baca](tests/postman/README.id.md) |
 | CSV seed notes | [Read](infra/db/dummy/seed-csv/README.txt) | [Baca](infra/db/dummy/seed-csv/README.id.txt) |
 

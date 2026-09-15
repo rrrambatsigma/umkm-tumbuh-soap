@@ -1,1489 +1,1103 @@
-{
-  "info": {
-    "_postman_id": "5b7fdb79-umkm-current-progress-try2",
-    "name": "UMKM Tumbuh Backend - Current Progress Try 2",
-    "description": "Current development API contracts. Uses a disposable database and the development-only email verification code; do not run against production.",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
-  },
-  "event": [
-    {
-      "listen": "prerequest",
-      "script": {
-        "type": "text/javascript",
-        "exec": [
-          "if (!pm.environment.get('umkm_test_password')) pm.environment.set('umkm_test_password', 'NewmanTest123!');",
-          "if (!pm.environment.get('run_id')) {",
-          "  const suffix = String(Date.now()).slice(-10);",
-          "  pm.environment.set('run_id', suffix);",
-          "  pm.environment.set('umkm_test_email', `newman.umkm.${suffix}@example.com`);",
-          "  pm.environment.set('umkm_test_phone', `08${suffix}`);",
-          "  pm.environment.set('umkm_test_nik', (`3372${suffix}000000000000`).slice(0, 16));",
-          "}",
-          ""
-        ]
-      }
-    }
-  ],
-  "item": [
-    {
-      "name": "00 - Health Checks",
-      "item": [
-        {
-          "name": "HP-HEALTH-001 Auth service health",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{auth_base_url}}/api/v1/health",
-              "host": [
-                "{{auth_base_url}}/api/v1/health"
-              ]
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Status code is 200', () => pm.response.to.have.status(200));",
-                  "pm.test('Response is JSON', function () { pm.response.to.be.json; });"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "HP-HEALTH-002 Auth DB health",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{auth_base_url}}/api/v1/health/db",
-              "host": [
-                "{{auth_base_url}}/api/v1/health/db"
-              ]
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Status code is 200', () => pm.response.to.have.status(200));",
-                  "pm.test('Response is JSON', function () { pm.response.to.be.json; });"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "HP-HEALTH-003 User service health",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{user_base_url}}/api/v1/health",
-              "host": [
-                "{{user_base_url}}/api/v1/health"
-              ]
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Status code is 200', () => pm.response.to.have.status(200));",
-                  "pm.test('Response is JSON', function () { pm.response.to.be.json; });"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "HP-HEALTH-004 User DB health",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{user_base_url}}/api/v1/health/db",
-              "host": [
-                "{{user_base_url}}/api/v1/health/db"
-              ]
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Status code is 200', () => pm.response.to.have.status(200));",
-                  "pm.test('Response is JSON', function () { pm.response.to.be.json; });"
-                ]
-              }
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "01 - Auth + Admin Approval Flow",
-      "item": [
-        {
-          "name": "HP-AUTH-001 Admin login seeded account",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{auth_base_url}}/api/v1/auth/login",
-              "host": [
-                "{{auth_base_url}}/api/v1/auth/login"
-              ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"{{admin_email}}\",\n  \"password\": \"{{admin_password}}\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Admin login returns 200', () => pm.response.to.have.status(200));",
-                  "pm.response.to.be.json;",
-                  "const json = pm.response.json();",
-                  "pm.expect(json.access_token, 'access_token').to.be.a('string').and.not.empty;",
-                  "pm.environment.set('admin_access_token', json.access_token);",
-                  "pm.test('Admin role returned', () => pm.expect(json.user.role).to.eql('ADMIN'));"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "HP-AUTH-002 Register UMKM account",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{auth_base_url}}/api/v1/auth/register",
-              "host": [
-                "{{auth_base_url}}/api/v1/auth/register"
-              ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"full_name\": \"Newman UMKM Owner {{run_id}}\",\n  \"email\": \"{{umkm_test_email}}\",\n  \"phone_number\": \"{{umkm_test_phone}}\",\n  \"nik\": \"{{umkm_test_nik}}\",\n  \"password\": \"{{umkm_test_password}}\",\n  \"role\": \"UMKM\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Register returns 201 Created', () => pm.response.to.have.status(201));",
-                  "pm.response.to.be.json;",
-                  "const json = pm.response.json();",
-                  "pm.expect(json.user.id, 'user.id').to.be.a('string').and.not.empty;",
-                  "pm.environment.set('umkm_account_id', json.user.id);",
-                  "pm.test('New account starts as MENUNGGU', () => pm.expect(json.user.status).to.eql('MENUNGGU'));"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "AP-AUTH-003 Duplicate UMKM registration should fail",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{auth_base_url}}/api/v1/auth/register",
-              "host": [
-                "{{auth_base_url}}/api/v1/auth/register"
-              ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"full_name\": \"Duplicate Newman UMKM Owner\",\n  \"email\": \"{{umkm_test_email}}\",\n  \"phone_number\": \"{{umkm_test_phone}}\",\n  \"nik\": \"{{umkm_test_nik}}\",\n  \"password\": \"{{umkm_test_password}}\",\n  \"role\": \"UMKM\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Duplicate register is rejected', () => pm.expect([400,409]).to.include(pm.response.code));",
-                  "pm.response.to.be.json;"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "SP-AUTH-004 Login before email verification is rejected",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{auth_base_url}}/api/v1/auth/login",
-              "host": [
-                "{{auth_base_url}}/api/v1/auth/login"
-              ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"{{umkm_test_email}}\",\n  \"password\": \"{{umkm_test_password}}\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Unverified email cannot login', () => pm.response.to.have.status(403));"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "HP-AUTH-004a Request email verification",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"{{umkm_test_email}}\"\n}"
-            },
-            "url": "{{auth_base_url}}/api/v1/auth/verify-email/request"
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Verification request returns 200', () => pm.response.to.have.status(200));",
-                  "const code = pm.response.json().dev_code;",
-                  "pm.test('Development verification code is returned', () => pm.expect(code).to.match(/^\\d{6}$/));",
-                  "pm.environment.set('verification_code', code);"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "HP-AUTH-004b Confirm email verification",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"{{umkm_test_email}}\",\n  \"code\": \"{{verification_code}}\"\n}"
-            },
-            "url": "{{auth_base_url}}/api/v1/auth/verify-email/confirm"
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Verification succeeds', () => pm.response.to.have.status(200));"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "HP-AUTH-004c Verified pending account can login for onboarding",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"{{umkm_test_email}}\",\n  \"password\": \"{{umkm_test_password}}\"\n}"
-            },
-            "url": "{{auth_base_url}}/api/v1/auth/login"
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Verified pending login returns 200', () => pm.response.to.have.status(200));",
-                  "const json = pm.response.json();",
-                  "pm.test('Approval is still pending', () => pm.expect(json.user.status).to.eql('MENUNGGU'));",
-                  "pm.test('Onboarding session exists', () => pm.expect(json.access_token).to.be.a('string').and.not.empty);"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "HP-ADMIN-001 List pending registrations",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{admin_access_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{auth_base_url}}/api/v1/admin/registrations?status=PENDING&search={{umkm_test_email}}",
-              "host": [
-                "{{auth_base_url}}"
+﻿{
+    "info":  {
+                 "_postman_id":  "5b7fdb79-umkm-current-progress-try2",
+                 "name":  "UMKM Tumbuh Backend - Current Progress Try 2",
+                 "description":  "Current development API contracts. Uses a disposable database and the development-only email verification code; do not run against production.",
+                 "schema":  "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+             },
+    "event":  [
+                  {
+                      "listen":  "prerequest",
+                      "script":  {
+                                     "type":  "text/javascript",
+                                     "exec":  [
+                                                  "if (!pm.environment.get(\u0027umkm_test_password\u0027)) pm.environment.set(\u0027umkm_test_password\u0027, \u0027NewmanTest123!\u0027);",
+                                                  "if (!pm.environment.get(\u0027run_id\u0027)) {",
+                                                  "  const suffix = String(Date.now()).slice(-10);",
+                                                  "  pm.environment.set(\u0027run_id\u0027, suffix);",
+                                                  "  pm.environment.set(\u0027umkm_test_email\u0027, `newman.umkm.${suffix}@example.com`);",
+                                                  "  pm.environment.set(\u0027umkm_test_phone\u0027, `08${suffix}`);",
+                                                  "  pm.environment.set(\u0027umkm_test_nik\u0027, (`3372${suffix}000000000000`).slice(0, 16));",
+                                                  "}",
+                                                  ""
+                                              ]
+                                 }
+                  }
               ],
-              "path": [
-                "api",
-                "v1",
-                "admin",
-                "registrations"
-              ],
-              "query": [
-                {
-                  "key": "status",
-                  "value": "PENDING"
-                },
-                {
-                  "key": "search",
-                  "value": "{{umkm_test_email}}"
-                }
-              ]
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('List registrations returns 200', () => pm.response.to.have.status(200));",
-                  "const json = pm.response.json();",
-                  "pm.test('Registration envelope is successful', () => pm.expect(json.status).to.eql('success'));",
-                  "const list = json.data.users;",
-                  "pm.test('Users is an array', () => pm.expect(list).to.be.an('array'));",
-                  "pm.test('New account appears in pending registrations', () => pm.expect(list.some(user => user.id === pm.environment.get('umkm_account_id'))).to.eql(true));"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "HP-ADMIN-002 Approve UMKM registration",
-          "request": {
-            "method": "PATCH",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{admin_access_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{auth_base_url}}/api/v1/admin/registrations/{{umkm_account_id}}/approve",
-              "host": [
-                "{{auth_base_url}}/api/v1/admin/registrations/{{umkm_account_id}}/approve"
-              ]
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Approve returns 200', () => pm.response.to.have.status(200));",
-                  "pm.test('Approval succeeds', () => pm.expect(pm.response.json().status).to.eql('success'));"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "HP-AUTH-005 Login approved UMKM account",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{auth_base_url}}/api/v1/auth/login",
-              "host": [
-                "{{auth_base_url}}/api/v1/auth/login"
-              ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"{{umkm_test_email}}\",\n  \"password\": \"{{umkm_test_password}}\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Approved UMKM login returns 200', () => pm.response.to.have.status(200));",
-                  "pm.response.to.be.json;",
-                  "const json = pm.response.json();",
-                  "pm.expect(json.access_token, 'access_token').to.be.a('string').and.not.empty;",
-                  "pm.environment.set('umkm_access_token', json.access_token);",
-                  "pm.test('UMKM role returned', () => pm.expect(json.user.role).to.eql('UMKM'));",
-                  "pm.test('Account is approved', () => pm.expect(json.user.status).to.eql('DISETUJUI'));"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "HP-AUTH-006 Auth /me with UMKM token",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{umkm_access_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{auth_base_url}}/api/v1/auth/me",
-              "host": [
-                "{{auth_base_url}}/api/v1/auth/me"
-              ]
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Auth me returns 200', () => pm.response.to.have.status(200));",
-                  "pm.response.to.be.json;",
-                  "pm.test('Current user email matches test email', () => pm.expect(pm.response.json().email).to.eql(pm.environment.get('umkm_test_email')));"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "SP-AUTH-007 Invalid login should fail",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{auth_base_url}}/api/v1/auth/login",
-              "host": [
-                "{{auth_base_url}}/api/v1/auth/login"
-              ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"{{umkm_test_email}}\",\n  \"password\": \"WrongPassword123!\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Invalid login rejected', () => pm.expect([400,401,403]).to.include(pm.response.code));",
-                  "pm.response.to.be.json;"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "SP-ADMIN-003 UMKM cannot approve registrations",
-          "request": {
-            "method": "PATCH",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{umkm_access_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{auth_base_url}}/api/v1/admin/registrations/{{umkm_account_id}}/approve",
-              "host": [
-                "{{auth_base_url}}/api/v1/admin/registrations/{{umkm_account_id}}/approve"
-              ]
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Non-admin approval is forbidden', () => pm.response.to.have.status(403));"
-                ]
-              }
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "02 - User Profile Service",
-      "item": [
-        {
-          "name": "SP-PROFILE-001 Protected profile without token should fail",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{user_base_url}}/api/v1/profiles/me",
-              "host": [
-                "{{user_base_url}}/api/v1/profiles/me"
-              ]
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Unauthorized without token', () => pm.response.to.have.status(401));",
-                  "pm.response.to.be.json;"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "AP-PROFILE-002 Get profile before created",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{umkm_access_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{user_base_url}}/api/v1/profiles/me",
-              "host": [
-                "{{user_base_url}}/api/v1/profiles/me"
-              ]
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Profile not created yet or already exists', () => pm.expect([200,404]).to.include(pm.response.code));",
-                  "pm.response.to.be.json;"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "HP-PROFILE-003 Upsert UMKM profile",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{umkm_access_token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{user_base_url}}/api/v1/profiles/me",
-              "host": [
-                "{{user_base_url}}/api/v1/profiles/me"
-              ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"business_name\": \"Newman Snack House {{run_id}}\",\n  \"business_category\": \"Makanan\",\n  \"business_description\": \"UMKM makanan ringan lokal untuk pengujian otomatis Newman.\",\n  \"owner_name\": \"Newman Owner\",\n  \"nik\": \"{{umkm_test_nik}}\",\n  \"established_year\": 2024,\n  \"business_email\": \"{{umkm_test_email}}\",\n  \"operating_hours\": \"08:00-17:00\",\n  \"social_media_marketplace\": \"https://example.com/newman-snack\",\n  \"phone_number\": \"{{umkm_test_phone}}\",\n  \"address\": \"Jl. Newman Test No. 1\",\n  \"city\": \"Surakarta\",\n  \"province\": \"Jawa Tengah\",\n  \"district\": \"Banjarsari\",\n  \"village\": \"Manahan\",\n  \"postal_code\": \"57139\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Profile upsert returns 200 and preserves the category', function () {",
-                  "  pm.expect(pm.response.code, pm.response.text()).to.eql(200);",
-                  "  const json = pm.response.json();",
-                  "  pm.expect(json.profile, 'profile').to.be.an('object');",
-                  "  pm.expect(json.profile.business_category, 'business_category').to.eql('Makanan');",
-                  "  pm.environment.set('umkm_profile_created', 'true');",
-                  "});"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "HP-PROFILE-004 Get profile after update",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{umkm_access_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{user_base_url}}/api/v1/profiles/me",
-              "host": [
-                "{{user_base_url}}/api/v1/profiles/me"
-              ]
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Get profile returns 200', () => pm.response.to.have.status(200));",
-                  "pm.response.to.be.json;",
-                  "pm.test('Profile contains Newman business name', () => pm.expect(pm.response.text()).to.include('Newman Snack House'));"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "SP-PROFILE-005 Invalid profile payload should fail",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{umkm_access_token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{user_base_url}}/api/v1/profiles/me",
-              "host": [
-                "{{user_base_url}}/api/v1/profiles/me"
-              ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"business_name\": \"\",\n  \"nik\": \"123\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Invalid profile payload rejected', () => pm.response.to.have.status(400));",
-                  "pm.response.to.be.json;"
-                ]
-              }
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "03 - Products Service",
-      "item": [
-        {
-          "name": "HP-PRODUCT-001 List products initially",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{umkm_access_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{user_base_url}}/api/v1/products/",
-              "host": [
-                "{{user_base_url}}/api/v1/products/"
-              ]
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('List products returns 200', () => pm.response.to.have.status(200));",
-                  "pm.response.to.be.json;",
-                  "pm.test('Products field exists', () => pm.expect(pm.response.json().products).to.be.an('array'));"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "HP-PRODUCT-002 Create product for sales test",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{umkm_access_token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{user_base_url}}/api/v1/products/",
-              "host": [
-                "{{user_base_url}}/api/v1/products/"
-              ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Keripik Newman {{run_id}}\",\n  \"category_name\": \"Makanan Ringan\",\n  \"description\": \"Produk dummy untuk test transaksi penjualan.\",\n  \"price\": 15000,\n  \"initial_stock\": 20,\n  \"status\": \"AKTIF\",\n  \"legalitas\": \"PIRT\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Create product returns 201', () => pm.response.to.have.status(201));",
-                  "pm.response.to.be.json;",
-                  "const json = pm.response.json();",
-                  "pm.expect(json.product.id, 'product.id').to.be.a('string').and.not.empty;",
-                  "pm.environment.set('product_id', json.product.id);"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "HP-PRODUCT-003 Get product detail",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{umkm_access_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{user_base_url}}/api/v1/products/{{product_id}}",
-              "host": [
-                "{{user_base_url}}/api/v1/products/{{product_id}}"
-              ]
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Get product returns 200', () => pm.response.to.have.status(200));",
-                  "pm.response.to.be.json;",
-                  "pm.test('Product id matches', () => pm.expect(pm.response.json().product.id).to.eql(pm.environment.get('product_id')));"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "HP-PRODUCT-004 Update product stock",
-          "request": {
-            "method": "PATCH",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{umkm_access_token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{user_base_url}}/api/v1/products/{{product_id}}/stock",
-              "host": [
-                "{{user_base_url}}/api/v1/products/{{product_id}}/stock"
-              ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"type\": \"RESTOCK\",\n  \"quantity\": 5,\n  \"note\": \"Newman restock test\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Update stock returns 200', () => pm.response.to.have.status(200));",
-                  "pm.response.to.be.json;"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "SP-PRODUCT-005 Invalid product create should fail",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{umkm_access_token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{user_base_url}}/api/v1/products/",
-              "host": [
-                "{{user_base_url}}/api/v1/products/"
-              ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"\",\n  \"price\": -1,\n  \"initial_stock\": -10\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Invalid product rejected', () => pm.response.to.have.status(400));",
-                  "pm.response.to.be.json;"
-                ]
-              }
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "04 - Sales Reporting / Sales Transactions",
-      "item": [
-        {
-          "name": "HP-SALES-001 Create sales transaction",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{umkm_access_token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{user_base_url}}/api/v1/sales/",
-              "host": [
-                "{{user_base_url}}/api/v1/sales/"
-              ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"transaction_date\": \"2026-06-10\",\n  \"total_profit\": 10000,\n  \"note\": \"Newman automated sales transaction test\",\n  \"items\": [\n    {\n      \"product_id\": \"{{product_id}}\",\n      \"quantity\": 2\n    }\n  ]\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Create sale returns 201', () => pm.response.to.have.status(201));",
-                  "pm.response.to.be.json;",
-                  "const json = pm.response.json();",
-                  "pm.expect(json.sale.id, 'sale.id').to.be.a('string').and.not.empty;",
-                  "pm.environment.set('sale_id', json.sale.id);"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "HP-SALES-002 List sales transactions",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{umkm_access_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{user_base_url}}/api/v1/sales/?from=2026-06-01&to=2026-06-30",
-              "host": [
-                "{{user_base_url}}/api/v1/sales/?from=2026-06-01&to=2026-06-30"
-              ]
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('List sales returns 200', () => pm.response.to.have.status(200));",
-                  "pm.response.to.be.json;",
-                  "pm.test('Sales field exists', () => pm.expect(pm.response.json().sales).to.be.an('array'));"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "HP-SALES-003 Get sales transaction detail",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{umkm_access_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{user_base_url}}/api/v1/sales/{{sale_id}}",
-              "host": [
-                "{{user_base_url}}/api/v1/sales/{{sale_id}}"
-              ]
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Get sale returns 200', () => pm.response.to.have.status(200));",
-                  "pm.response.to.be.json;",
-                  "pm.test('Sale id matches', () => pm.expect(pm.response.json().sale.id).to.eql(pm.environment.get('sale_id')));"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "SP-SALES-004 Create sale without items should fail",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{umkm_access_token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{user_base_url}}/api/v1/sales/",
-              "host": [
-                "{{user_base_url}}/api/v1/sales/"
-              ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"transaction_date\": \"2026-06-10\",\n  \"total_profit\": 1000,\n  \"items\": []\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('No items rejected', () => pm.response.to.have.status(400));",
-                  "pm.response.to.be.json;"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "SP-SALES-005 Create sale with excessive quantity should fail",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{umkm_access_token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{user_base_url}}/api/v1/sales/",
-              "host": [
-                "{{user_base_url}}/api/v1/sales/"
-              ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"transaction_date\": \"2026-06-10\",\n  \"total_profit\": 1000,\n  \"items\": [\n    {\n      \"product_id\": \"{{product_id}}\",\n      \"quantity\": 999999\n    }\n  ]\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Excessive quantity rejected', () => pm.response.to.have.status(400));",
-                  "pm.response.to.be.json;"
-                ]
-              }
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "06 - UMKM Dashboard Summary",
-      "item": [
-        {
-          "name": "HP-DASHBOARD-001 UMKM summary today",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{umkm_access_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{user_base_url}}/api/v1/dashboard/umkm/summary?range=today",
-              "host": [
-                "{{user_base_url}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "dashboard",
-                "umkm",
-                "summary"
-              ],
-              "query": [
-                {
-                  "key": "range",
-                  "value": "today"
-                }
-              ]
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Status code is 200', () => pm.response.to.have.status(200));",
-                  "pm.response.to.be.json;",
-                  "const json = pm.response.json();",
-                  "pm.expect(json.summary, 'summary').to.be.an('object');",
-                  "pm.expect(json.summary.period, 'period').to.be.an('object');",
-                  "pm.expect(json.summary.metrics, 'metrics').to.be.an('object');",
-                  "pm.test('Range is today', () => pm.expect(json.summary.period.range).to.eql('today'));",
-                  "pm.expect(json.summary.period.from, 'period.from').to.be.a('string').and.not.empty;",
-                  "pm.expect(json.summary.period.to, 'period.to').to.be.a('string').and.not.empty;",
-                  "pm.expect(json.summary.metrics.total_omzet, 'total_omzet').to.be.a('number');",
-                  "pm.expect(json.summary.metrics.total_profit, 'total_profit').to.be.a('number');",
-                  "pm.expect(json.summary.metrics.total_item, 'total_item').to.be.a('number');",
-                  "pm.expect(json.summary.metrics.transaction_count, 'transaction_count').to.be.a('number');",
-                  "pm.expect(json.summary.metrics.average_order, 'average_order').to.be.a('number');",
-                  "pm.expect(json.summary.metrics.active_products, 'active_products').to.be.a('number');",
-                  "pm.expect(json.summary.metrics.total_stock, 'total_stock').to.be.a('number');",
-                  "pm.expect(json.summary.metrics.low_stock_count, 'low_stock_count').to.be.a('number');",
-                  "pm.expect(json.summary.recent_sales, 'recent_sales').to.be.an('array');",
-                  "pm.expect(json.summary.top_products, 'top_products').to.be.an('array');",
-                  "pm.expect(json.summary.daily_sales, 'daily_sales').to.be.an('array');",
-                  "pm.expect(json.summary.low_stock_products, 'low_stock_products').to.be.an('array');",
-                  "pm.test('Daily sales length is 1', () => pm.expect(json.summary.daily_sales.length).to.eql(1));"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "HP-DASHBOARD-002 UMKM summary 7 days",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{umkm_access_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{user_base_url}}/api/v1/dashboard/umkm/summary?range=7d",
-              "host": [
-                "{{user_base_url}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "dashboard",
-                "umkm",
-                "summary"
-              ],
-              "query": [
-                {
-                  "key": "range",
-                  "value": "7d"
-                }
-              ]
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Status code is 200', () => pm.response.to.have.status(200));",
-                  "pm.response.to.be.json;",
-                  "const json = pm.response.json();",
-                  "pm.expect(json.summary, 'summary').to.be.an('object');",
-                  "pm.expect(json.summary.period, 'period').to.be.an('object');",
-                  "pm.expect(json.summary.metrics, 'metrics').to.be.an('object');",
-                  "pm.test('Range is 7d', () => pm.expect(json.summary.period.range).to.eql('7d'));",
-                  "pm.expect(json.summary.period.from, 'period.from').to.be.a('string').and.not.empty;",
-                  "pm.expect(json.summary.period.to, 'period.to').to.be.a('string').and.not.empty;",
-                  "pm.expect(json.summary.metrics.total_omzet, 'total_omzet').to.be.a('number');",
-                  "pm.expect(json.summary.metrics.total_profit, 'total_profit').to.be.a('number');",
-                  "pm.expect(json.summary.metrics.total_item, 'total_item').to.be.a('number');",
-                  "pm.expect(json.summary.metrics.transaction_count, 'transaction_count').to.be.a('number');",
-                  "pm.expect(json.summary.metrics.average_order, 'average_order').to.be.a('number');",
-                  "pm.expect(json.summary.metrics.active_products, 'active_products').to.be.a('number');",
-                  "pm.expect(json.summary.metrics.total_stock, 'total_stock').to.be.a('number');",
-                  "pm.expect(json.summary.metrics.low_stock_count, 'low_stock_count').to.be.a('number');",
-                  "pm.expect(json.summary.recent_sales, 'recent_sales').to.be.an('array');",
-                  "pm.expect(json.summary.top_products, 'top_products').to.be.an('array');",
-                  "pm.expect(json.summary.daily_sales, 'daily_sales').to.be.an('array');",
-                  "pm.expect(json.summary.low_stock_products, 'low_stock_products').to.be.an('array');",
-                  "pm.test('Daily sales length is 7', () => pm.expect(json.summary.daily_sales.length).to.eql(7));"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "HP-DASHBOARD-003 UMKM summary 30 days",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{umkm_access_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{user_base_url}}/api/v1/dashboard/umkm/summary?range=30d",
-              "host": [
-                "{{user_base_url}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "dashboard",
-                "umkm",
-                "summary"
-              ],
-              "query": [
-                {
-                  "key": "range",
-                  "value": "30d"
-                }
-              ]
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Status code is 200', () => pm.response.to.have.status(200));",
-                  "pm.response.to.be.json;",
-                  "const json = pm.response.json();",
-                  "pm.expect(json.summary, 'summary').to.be.an('object');",
-                  "pm.expect(json.summary.period, 'period').to.be.an('object');",
-                  "pm.expect(json.summary.metrics, 'metrics').to.be.an('object');",
-                  "pm.test('Range is 30d', () => pm.expect(json.summary.period.range).to.eql('30d'));",
-                  "pm.expect(json.summary.period.from, 'period.from').to.be.a('string').and.not.empty;",
-                  "pm.expect(json.summary.period.to, 'period.to').to.be.a('string').and.not.empty;",
-                  "pm.expect(json.summary.metrics.total_omzet, 'total_omzet').to.be.a('number');",
-                  "pm.expect(json.summary.metrics.total_profit, 'total_profit').to.be.a('number');",
-                  "pm.expect(json.summary.metrics.total_item, 'total_item').to.be.a('number');",
-                  "pm.expect(json.summary.metrics.transaction_count, 'transaction_count').to.be.a('number');",
-                  "pm.expect(json.summary.metrics.average_order, 'average_order').to.be.a('number');",
-                  "pm.expect(json.summary.metrics.active_products, 'active_products').to.be.a('number');",
-                  "pm.expect(json.summary.metrics.total_stock, 'total_stock').to.be.a('number');",
-                  "pm.expect(json.summary.metrics.low_stock_count, 'low_stock_count').to.be.a('number');",
-                  "pm.expect(json.summary.recent_sales, 'recent_sales').to.be.an('array');",
-                  "pm.expect(json.summary.top_products, 'top_products').to.be.an('array');",
-                  "pm.expect(json.summary.daily_sales, 'daily_sales').to.be.an('array');",
-                  "pm.expect(json.summary.low_stock_products, 'low_stock_products').to.be.an('array');",
-                  "pm.test('Daily sales length is 30', () => pm.expect(json.summary.daily_sales.length).to.eql(30));"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "HP-DASHBOARD-004 UMKM summary current month",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{umkm_access_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{user_base_url}}/api/v1/dashboard/umkm/summary?range=month",
-              "host": [
-                "{{user_base_url}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "dashboard",
-                "umkm",
-                "summary"
-              ],
-              "query": [
-                {
-                  "key": "range",
-                  "value": "month"
-                }
-              ]
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Status code is 200', () => pm.response.to.have.status(200));",
-                  "pm.response.to.be.json;",
-                  "const json = pm.response.json();",
-                  "pm.expect(json.summary, 'summary').to.be.an('object');",
-                  "pm.expect(json.summary.period, 'period').to.be.an('object');",
-                  "pm.expect(json.summary.metrics, 'metrics').to.be.an('object');",
-                  "pm.test('Range is month', () => pm.expect(json.summary.period.range).to.eql('month'));",
-                  "pm.expect(json.summary.period.from, 'period.from').to.be.a('string').and.not.empty;",
-                  "pm.expect(json.summary.period.to, 'period.to').to.be.a('string').and.not.empty;",
-                  "pm.expect(json.summary.metrics.total_omzet, 'total_omzet').to.be.a('number');",
-                  "pm.expect(json.summary.metrics.total_profit, 'total_profit').to.be.a('number');",
-                  "pm.expect(json.summary.metrics.total_item, 'total_item').to.be.a('number');",
-                  "pm.expect(json.summary.metrics.transaction_count, 'transaction_count').to.be.a('number');",
-                  "pm.expect(json.summary.metrics.average_order, 'average_order').to.be.a('number');",
-                  "pm.expect(json.summary.metrics.active_products, 'active_products').to.be.a('number');",
-                  "pm.expect(json.summary.metrics.total_stock, 'total_stock').to.be.a('number');",
-                  "pm.expect(json.summary.metrics.low_stock_count, 'low_stock_count').to.be.a('number');",
-                  "pm.expect(json.summary.recent_sales, 'recent_sales').to.be.an('array');",
-                  "pm.expect(json.summary.top_products, 'top_products').to.be.an('array');",
-                  "pm.expect(json.summary.daily_sales, 'daily_sales').to.be.an('array');",
-                  "pm.expect(json.summary.low_stock_products, 'low_stock_products').to.be.an('array');"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "AP-DASHBOARD-005 UMKM summary requires auth",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{user_base_url}}/api/v1/dashboard/umkm/summary?range=7d",
-              "host": [
-                "{{user_base_url}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "dashboard",
-                "umkm",
-                "summary"
-              ],
-              "query": [
-                {
-                  "key": "range",
-                  "value": "7d"
-                }
-              ]
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Request without token is rejected', () => pm.expect([401,403]).to.include(pm.response.code));",
-                  "pm.response.to.be.json;"
-                ]
-              }
-            }
-          ]
-        }
-      ]
-    }
-  ]
+    "item":  [
+                 {
+                     "name":  "00 - Health Checks",
+                     "item":  [
+                                  {
+                                      "name":  "HP-HEALTH-001 Auth service health",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{auth_base_url}}/api/v1/health",
+                                                                  "host":  [
+                                                                               "{{auth_base_url}}/api/v1/health"
+                                                                           ]
+                                                              }
+                                                  },
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Status code is 200\u0027, () =\u003e pm.response.to.have.status(200));",
+                                                                                    "pm.test(\u0027Response is JSON\u0027, function () { pm.response.to.be.json; });"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "name":  "HP-HEALTH-002 Auth DB health",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{auth_base_url}}/api/v1/health/db",
+                                                                  "host":  [
+                                                                               "{{auth_base_url}}/api/v1/health/db"
+                                                                           ]
+                                                              }
+                                                  },
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Status code is 200\u0027, () =\u003e pm.response.to.have.status(200));",
+                                                                                    "pm.test(\u0027Response is JSON\u0027, function () { pm.response.to.be.json; });"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "name":  "HP-HEALTH-003 User service health",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{user_base_url}}/api/v1/health",
+                                                                  "host":  [
+                                                                               "{{user_base_url}}/api/v1/health"
+                                                                           ]
+                                                              }
+                                                  },
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Status code is 200\u0027, () =\u003e pm.response.to.have.status(200));",
+                                                                                    "pm.test(\u0027Response is JSON\u0027, function () { pm.response.to.be.json; });"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "name":  "HP-HEALTH-004 User DB health",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{user_base_url}}/api/v1/health/db",
+                                                                  "host":  [
+                                                                               "{{user_base_url}}/api/v1/health/db"
+                                                                           ]
+                                                              }
+                                                  },
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Status code is 200\u0027, () =\u003e pm.response.to.have.status(200));",
+                                                                                    "pm.test(\u0027Response is JSON\u0027, function () { pm.response.to.be.json; });"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ]
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "01 - Auth + Admin Approval Flow",
+                     "item":  [
+                                  {
+                                      "name":  "HP-AUTH-001 Admin login seeded account",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{auth_base_url}}/api/v1/auth/login",
+                                                                  "host":  [
+                                                                               "{{auth_base_url}}/api/v1/auth/login"
+                                                                           ]
+                                                              },
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"email\": \"{{admin_email}}\",\n  \"password\": \"{{admin_password}}\"\n}",
+                                                                   "options":  {
+                                                                                   "raw":  {
+                                                                                               "language":  "json"
+                                                                                           }
+                                                                               }
+                                                               }
+                                                  },
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Admin login returns 200\u0027, () =\u003e pm.response.to.have.status(200));",
+                                                                                    "pm.response.to.be.json;",
+                                                                                    "const json = pm.response.json();",
+                                                                                    "pm.expect(json.access_token, \u0027access_token\u0027).to.be.a(\u0027string\u0027).and.not.empty;",
+                                                                                    "pm.environment.set(\u0027admin_access_token\u0027, json.access_token);",
+                                                                                    "pm.test(\u0027Admin role returned\u0027, () =\u003e pm.expect(json.user.role).to.eql(\u0027ADMIN\u0027));"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "name":  "HP-AUTH-002 Register UMKM account",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{auth_base_url}}/api/v1/auth/register",
+                                                                  "host":  [
+                                                                               "{{auth_base_url}}/api/v1/auth/register"
+                                                                           ]
+                                                              },
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"full_name\": \"Newman UMKM Owner {{run_id}}\",\n  \"email\": \"{{umkm_test_email}}\",\n  \"phone_number\": \"{{umkm_test_phone}}\",\n  \"nik\": \"{{umkm_test_nik}}\",\n  \"password\": \"{{umkm_test_password}}\",\n  \"role\": \"UMKM\"\n}",
+                                                                   "options":  {
+                                                                                   "raw":  {
+                                                                                               "language":  "json"
+                                                                                           }
+                                                                               }
+                                                               }
+                                                  },
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Register returns 201 Created\u0027, () =\u003e pm.response.to.have.status(201));",
+                                                                                    "pm.response.to.be.json;",
+                                                                                    "const json = pm.response.json();",
+                                                                                    "pm.expect(json.user.id, \u0027user.id\u0027).to.be.a(\u0027string\u0027).and.not.empty;",
+                                                                                    "pm.environment.set(\u0027umkm_account_id\u0027, json.user.id);",
+                                                                                    "pm.test(\u0027New account starts as MENUNGGU\u0027, () =\u003e pm.expect(json.user.status).to.eql(\u0027MENUNGGU\u0027));"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "name":  "AP-AUTH-003 Duplicate UMKM registration should fail",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{auth_base_url}}/api/v1/auth/register",
+                                                                  "host":  [
+                                                                               "{{auth_base_url}}/api/v1/auth/register"
+                                                                           ]
+                                                              },
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"full_name\": \"Duplicate Newman UMKM Owner\",\n  \"email\": \"{{umkm_test_email}}\",\n  \"phone_number\": \"{{umkm_test_phone}}\",\n  \"nik\": \"{{umkm_test_nik}}\",\n  \"password\": \"{{umkm_test_password}}\",\n  \"role\": \"UMKM\"\n}",
+                                                                   "options":  {
+                                                                                   "raw":  {
+                                                                                               "language":  "json"
+                                                                                           }
+                                                                               }
+                                                               }
+                                                  },
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Duplicate register is rejected\u0027, () =\u003e pm.expect([400,409]).to.include(pm.response.code));",
+                                                                                    "pm.response.to.be.json;"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "name":  "SP-AUTH-004 Login before email verification is rejected",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{auth_base_url}}/api/v1/auth/login",
+                                                                  "host":  [
+                                                                               "{{auth_base_url}}/api/v1/auth/login"
+                                                                           ]
+                                                              },
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"email\": \"{{umkm_test_email}}\",\n  \"password\": \"{{umkm_test_password}}\"\n}",
+                                                                   "options":  {
+                                                                                   "raw":  {
+                                                                                               "language":  "json"
+                                                                                           }
+                                                                               }
+                                                               }
+                                                  },
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Unverified email cannot login\u0027, () =\u003e pm.response.to.have.status(403));"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "name":  "HP-AUTH-004a Request email verification",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"email\": \"{{umkm_test_email}}\"\n}"
+                                                               },
+                                                      "url":  "{{auth_base_url}}/api/v1/auth/verify-email/request"
+                                                  },
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Verification request returns 200\u0027, () =\u003e pm.response.to.have.status(200));",
+                                                                                    "const code = pm.response.json().dev_code;",
+                                                                                    "pm.test(\u0027Development verification code is returned\u0027, () =\u003e pm.expect(code).to.match(/^\\d{6}$/));",
+                                                                                    "pm.environment.set(\u0027verification_code\u0027, code);"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "name":  "HP-AUTH-004b Confirm email verification",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"email\": \"{{umkm_test_email}}\",\n  \"code\": \"{{verification_code}}\"\n}"
+                                                               },
+                                                      "url":  "{{auth_base_url}}/api/v1/auth/verify-email/confirm"
+                                                  },
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Verification succeeds\u0027, () =\u003e pm.response.to.have.status(200));"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "name":  "HP-AUTH-004c Verified pending account can login for onboarding",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"email\": \"{{umkm_test_email}}\",\n  \"password\": \"{{umkm_test_password}}\"\n}"
+                                                               },
+                                                      "url":  "{{auth_base_url}}/api/v1/auth/login"
+                                                  },
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Verified pending login returns 200\u0027, () =\u003e pm.response.to.have.status(200));",
+                                                                                    "const json = pm.response.json();",
+                                                                                    "pm.test(\u0027Approval is still pending\u0027, () =\u003e pm.expect(json.user.status).to.eql(\u0027MENUNGGU\u0027));",
+                                                                                    "pm.test(\u0027Onboarding session exists\u0027, () =\u003e pm.expect(json.access_token).to.be.a(\u0027string\u0027).and.not.empty);"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "name":  "HP-ADMIN-001 List pending registrations",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{admin_access_token}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{auth_base_url}}/api/v1/admin/registrations?status=PENDING\u0026search={{umkm_test_email}}",
+                                                                  "host":  [
+                                                                               "{{auth_base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "api",
+                                                                               "v1",
+                                                                               "admin",
+                                                                               "registrations"
+                                                                           ],
+                                                                  "query":  [
+                                                                                {
+                                                                                    "key":  "status",
+                                                                                    "value":  "PENDING"
+                                                                                },
+                                                                                {
+                                                                                    "key":  "search",
+                                                                                    "value":  "{{umkm_test_email}}"
+                                                                                }
+                                                                            ]
+                                                              }
+                                                  },
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027List registrations returns 200\u0027, () =\u003e pm.response.to.have.status(200));",
+                                                                                    "const json = pm.response.json();",
+                                                                                    "pm.test(\u0027Registration envelope is successful\u0027, () =\u003e pm.expect(json.status).to.eql(\u0027success\u0027));",
+                                                                                    "const list = json.data.users;",
+                                                                                    "pm.test(\u0027Users is an array\u0027, () =\u003e pm.expect(list).to.be.an(\u0027array\u0027));",
+                                                                                    "pm.test(\u0027New account appears in pending registrations\u0027, () =\u003e pm.expect(list.some(user =\u003e user.id === pm.environment.get(\u0027umkm_account_id\u0027))).to.eql(true));"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "name":  "HP-ADMIN-002 Approve UMKM registration",
+                                      "request":  {
+                                                      "method":  "PATCH",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{admin_access_token}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{auth_base_url}}/api/v1/admin/registrations/{{umkm_account_id}}/approve",
+                                                                  "host":  [
+                                                                               "{{auth_base_url}}/api/v1/admin/registrations/{{umkm_account_id}}/approve"
+                                                                           ]
+                                                              }
+                                                  },
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Approve returns 200\u0027, () =\u003e pm.response.to.have.status(200));",
+                                                                                    "pm.test(\u0027Approval succeeds\u0027, () =\u003e pm.expect(pm.response.json().status).to.eql(\u0027success\u0027));"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "name":  "HP-AUTH-005 Login approved UMKM account",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{auth_base_url}}/api/v1/auth/login",
+                                                                  "host":  [
+                                                                               "{{auth_base_url}}/api/v1/auth/login"
+                                                                           ]
+                                                              },
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"email\": \"{{umkm_test_email}}\",\n  \"password\": \"{{umkm_test_password}}\"\n}",
+                                                                   "options":  {
+                                                                                   "raw":  {
+                                                                                               "language":  "json"
+                                                                                           }
+                                                                               }
+                                                               }
+                                                  },
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Approved UMKM login returns 200\u0027, () =\u003e pm.response.to.have.status(200));",
+                                                                                    "pm.response.to.be.json;",
+                                                                                    "const json = pm.response.json();",
+                                                                                    "pm.expect(json.access_token, \u0027access_token\u0027).to.be.a(\u0027string\u0027).and.not.empty;",
+                                                                                    "pm.environment.set(\u0027umkm_access_token\u0027, json.access_token);",
+                                                                                    "pm.test(\u0027UMKM role returned\u0027, () =\u003e pm.expect(json.user.role).to.eql(\u0027UMKM\u0027));",
+                                                                                    "pm.test(\u0027Account is approved\u0027, () =\u003e pm.expect(json.user.status).to.eql(\u0027DISETUJUI\u0027));"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "name":  "HP-AUTH-006 Auth /me with UMKM token",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{umkm_access_token}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{auth_base_url}}/api/v1/auth/me",
+                                                                  "host":  [
+                                                                               "{{auth_base_url}}/api/v1/auth/me"
+                                                                           ]
+                                                              }
+                                                  },
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Auth me returns 200\u0027, () =\u003e pm.response.to.have.status(200));",
+                                                                                    "pm.response.to.be.json;",
+                                                                                    "pm.test(\u0027Current user email matches test email\u0027, () =\u003e pm.expect(pm.response.json().email).to.eql(pm.environment.get(\u0027umkm_test_email\u0027)));"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "name":  "SP-AUTH-007 Invalid login should fail",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{auth_base_url}}/api/v1/auth/login",
+                                                                  "host":  [
+                                                                               "{{auth_base_url}}/api/v1/auth/login"
+                                                                           ]
+                                                              },
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"email\": \"{{umkm_test_email}}\",\n  \"password\": \"WrongPassword123!\"\n}",
+                                                                   "options":  {
+                                                                                   "raw":  {
+                                                                                               "language":  "json"
+                                                                                           }
+                                                                               }
+                                                               }
+                                                  },
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Invalid login rejected\u0027, () =\u003e pm.expect([400,401,403]).to.include(pm.response.code));",
+                                                                                    "pm.response.to.be.json;"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "name":  "SP-ADMIN-003 UMKM cannot approve registrations",
+                                      "request":  {
+                                                      "method":  "PATCH",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{umkm_access_token}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{auth_base_url}}/api/v1/admin/registrations/{{umkm_account_id}}/approve",
+                                                                  "host":  [
+                                                                               "{{auth_base_url}}/api/v1/admin/registrations/{{umkm_account_id}}/approve"
+                                                                           ]
+                                                              }
+                                                  },
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Non-admin approval is forbidden\u0027, () =\u003e pm.response.to.have.status(403));"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ]
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "02 - User Profile Service",
+                     "item":  [
+                                  {
+                                      "name":  "SP-PROFILE-001 Protected profile without token should fail",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{user_base_url}}/api/v1/profiles/me",
+                                                                  "host":  [
+                                                                               "{{user_base_url}}/api/v1/profiles/me"
+                                                                           ]
+                                                              }
+                                                  },
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Unauthorized without token\u0027, () =\u003e pm.response.to.have.status(401));",
+                                                                                    "pm.response.to.be.json;"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "name":  "AP-PROFILE-002 Get profile before created",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{umkm_access_token}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{user_base_url}}/api/v1/profiles/me",
+                                                                  "host":  [
+                                                                               "{{user_base_url}}/api/v1/profiles/me"
+                                                                           ]
+                                                              }
+                                                  },
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Profile not created yet or already exists\u0027, () =\u003e pm.expect([200,404]).to.include(pm.response.code));",
+                                                                                    "pm.response.to.be.json;"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "name":  "HP-PROFILE-003 Upsert UMKM profile",
+                                      "request":  {
+                                                      "method":  "PUT",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{umkm_access_token}}"
+                                                                     },
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{user_base_url}}/api/v1/profiles/me",
+                                                                  "host":  [
+                                                                               "{{user_base_url}}/api/v1/profiles/me"
+                                                                           ]
+                                                              },
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"business_name\": \"Newman Snack House {{run_id}}\",\n  \"business_category\": \"Makanan\",\n  \"business_description\": \"UMKM makanan ringan lokal untuk pengujian otomatis Newman.\",\n  \"owner_name\": \"Newman Owner\",\n  \"nik\": \"{{umkm_test_nik}}\",\n  \"established_year\": 2024,\n  \"business_email\": \"{{umkm_test_email}}\",\n  \"operating_hours\": \"08:00-17:00\",\n  \"social_media_marketplace\": \"https://example.com/newman-snack\",\n  \"phone_number\": \"{{umkm_test_phone}}\",\n  \"address\": \"Jl. Newman Test No. 1\",\n  \"city\": \"Surakarta\",\n  \"province\": \"Jawa Tengah\",\n  \"district\": \"Banjarsari\",\n  \"village\": \"Manahan\",\n  \"postal_code\": \"57139\"\n}",
+                                                                   "options":  {
+                                                                                   "raw":  {
+                                                                                               "language":  "json"
+                                                                                           }
+                                                                               }
+                                                               }
+                                                  },
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Profile upsert returns 200 and preserves the category\u0027, function () {",
+                                                                                    "  pm.expect(pm.response.code, pm.response.text()).to.eql(200);",
+                                                                                    "  const json = pm.response.json();",
+                                                                                    "  pm.expect(json.profile, \u0027profile\u0027).to.be.an(\u0027object\u0027);",
+                                                                                    "  pm.expect(json.profile.business_category, \u0027business_category\u0027).to.eql(\u0027Makanan\u0027);",
+                                                                                    "  pm.environment.set(\u0027umkm_profile_created\u0027, \u0027true\u0027);",
+                                                                                    "});"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "name":  "HP-PROFILE-004 Get profile after update",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{umkm_access_token}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{user_base_url}}/api/v1/profiles/me",
+                                                                  "host":  [
+                                                                               "{{user_base_url}}/api/v1/profiles/me"
+                                                                           ]
+                                                              }
+                                                  },
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Get profile returns 200\u0027, () =\u003e pm.response.to.have.status(200));",
+                                                                                    "pm.response.to.be.json;",
+                                                                                    "pm.test(\u0027Profile contains Newman business name\u0027, () =\u003e pm.expect(pm.response.text()).to.include(\u0027Newman Snack House\u0027));"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "name":  "SP-PROFILE-005 Invalid profile payload should fail",
+                                      "request":  {
+                                                      "method":  "PUT",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{umkm_access_token}}"
+                                                                     },
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{user_base_url}}/api/v1/profiles/me",
+                                                                  "host":  [
+                                                                               "{{user_base_url}}/api/v1/profiles/me"
+                                                                           ]
+                                                              },
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"business_name\": \"\",\n  \"nik\": \"123\"\n}",
+                                                                   "options":  {
+                                                                                   "raw":  {
+                                                                                               "language":  "json"
+                                                                                           }
+                                                                               }
+                                                               }
+                                                  },
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Invalid profile payload rejected\u0027, () =\u003e pm.response.to.have.status(400));",
+                                                                                    "pm.response.to.be.json;"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ]
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "06 - UMKM Dashboard Summary",
+                     "item":  [
+                                  {
+                                      "name":  "HP-DASHBOARD-001 UMKM summary today",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{umkm_access_token}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{user_base_url}}/api/v1/dashboard/umkm/summary?range=today",
+                                                                  "host":  [
+                                                                               "{{user_base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "api",
+                                                                               "v1",
+                                                                               "dashboard",
+                                                                               "umkm",
+                                                                               "summary"
+                                                                           ],
+                                                                  "query":  [
+                                                                                {
+                                                                                    "key":  "range",
+                                                                                    "value":  "today"
+                                                                                }
+                                                                            ]
+                                                              }
+                                                  },
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Status code is 200\u0027, () =\u003e pm.response.to.have.status(200));",
+                                                                                    "pm.response.to.be.json;",
+                                                                                    "const json = pm.response.json();",
+                                                                                    "pm.expect(json.summary, \u0027summary\u0027).to.be.an(\u0027object\u0027);",
+                                                                                    "pm.expect(json.summary.period, \u0027period\u0027).to.be.an(\u0027object\u0027);",
+                                                                                    "pm.expect(json.summary.metrics, \u0027metrics\u0027).to.be.an(\u0027object\u0027);",
+                                                                                    "pm.test(\u0027Range is today\u0027, () =\u003e pm.expect(json.summary.period.range).to.eql(\u0027today\u0027));",
+                                                                                    "pm.expect(json.summary.period.from, \u0027period.from\u0027).to.be.a(\u0027string\u0027).and.not.empty;",
+                                                                                    "pm.expect(json.summary.period.to, \u0027period.to\u0027).to.be.a(\u0027string\u0027).and.not.empty;",
+                                                                                    "pm.expect(json.summary.metrics.total_omzet, \u0027total_omzet\u0027).to.be.a(\u0027number\u0027);",
+                                                                                    "pm.expect(json.summary.metrics.total_profit, \u0027total_profit\u0027).to.be.a(\u0027number\u0027);",
+                                                                                    "pm.expect(json.summary.metrics.total_item, \u0027total_item\u0027).to.be.a(\u0027number\u0027);",
+                                                                                    "pm.expect(json.summary.metrics.transaction_count, \u0027transaction_count\u0027).to.be.a(\u0027number\u0027);",
+                                                                                    "pm.expect(json.summary.metrics.average_order, \u0027average_order\u0027).to.be.a(\u0027number\u0027);",
+                                                                                    "pm.expect(json.summary.metrics.active_products, \u0027active_products\u0027).to.be.a(\u0027number\u0027);",
+                                                                                    "pm.expect(json.summary.metrics.total_stock, \u0027total_stock\u0027).to.be.a(\u0027number\u0027);",
+                                                                                    "pm.expect(json.summary.metrics.low_stock_count, \u0027low_stock_count\u0027).to.be.a(\u0027number\u0027);",
+                                                                                    "pm.expect(json.summary.recent_sales, \u0027recent_sales\u0027).to.be.an(\u0027array\u0027);",
+                                                                                    "pm.expect(json.summary.top_products, \u0027top_products\u0027).to.be.an(\u0027array\u0027);",
+                                                                                    "pm.expect(json.summary.daily_sales, \u0027daily_sales\u0027).to.be.an(\u0027array\u0027);",
+                                                                                    "pm.expect(json.summary.low_stock_products, \u0027low_stock_products\u0027).to.be.an(\u0027array\u0027);",
+                                                                                    "pm.test(\u0027Daily sales length is 1\u0027, () =\u003e pm.expect(json.summary.daily_sales.length).to.eql(1));"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "name":  "HP-DASHBOARD-002 UMKM summary 7 days",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{umkm_access_token}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{user_base_url}}/api/v1/dashboard/umkm/summary?range=7d",
+                                                                  "host":  [
+                                                                               "{{user_base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "api",
+                                                                               "v1",
+                                                                               "dashboard",
+                                                                               "umkm",
+                                                                               "summary"
+                                                                           ],
+                                                                  "query":  [
+                                                                                {
+                                                                                    "key":  "range",
+                                                                                    "value":  "7d"
+                                                                                }
+                                                                            ]
+                                                              }
+                                                  },
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Status code is 200\u0027, () =\u003e pm.response.to.have.status(200));",
+                                                                                    "pm.response.to.be.json;",
+                                                                                    "const json = pm.response.json();",
+                                                                                    "pm.expect(json.summary, \u0027summary\u0027).to.be.an(\u0027object\u0027);",
+                                                                                    "pm.expect(json.summary.period, \u0027period\u0027).to.be.an(\u0027object\u0027);",
+                                                                                    "pm.expect(json.summary.metrics, \u0027metrics\u0027).to.be.an(\u0027object\u0027);",
+                                                                                    "pm.test(\u0027Range is 7d\u0027, () =\u003e pm.expect(json.summary.period.range).to.eql(\u00277d\u0027));",
+                                                                                    "pm.expect(json.summary.period.from, \u0027period.from\u0027).to.be.a(\u0027string\u0027).and.not.empty;",
+                                                                                    "pm.expect(json.summary.period.to, \u0027period.to\u0027).to.be.a(\u0027string\u0027).and.not.empty;",
+                                                                                    "pm.expect(json.summary.metrics.total_omzet, \u0027total_omzet\u0027).to.be.a(\u0027number\u0027);",
+                                                                                    "pm.expect(json.summary.metrics.total_profit, \u0027total_profit\u0027).to.be.a(\u0027number\u0027);",
+                                                                                    "pm.expect(json.summary.metrics.total_item, \u0027total_item\u0027).to.be.a(\u0027number\u0027);",
+                                                                                    "pm.expect(json.summary.metrics.transaction_count, \u0027transaction_count\u0027).to.be.a(\u0027number\u0027);",
+                                                                                    "pm.expect(json.summary.metrics.average_order, \u0027average_order\u0027).to.be.a(\u0027number\u0027);",
+                                                                                    "pm.expect(json.summary.metrics.active_products, \u0027active_products\u0027).to.be.a(\u0027number\u0027);",
+                                                                                    "pm.expect(json.summary.metrics.total_stock, \u0027total_stock\u0027).to.be.a(\u0027number\u0027);",
+                                                                                    "pm.expect(json.summary.metrics.low_stock_count, \u0027low_stock_count\u0027).to.be.a(\u0027number\u0027);",
+                                                                                    "pm.expect(json.summary.recent_sales, \u0027recent_sales\u0027).to.be.an(\u0027array\u0027);",
+                                                                                    "pm.expect(json.summary.top_products, \u0027top_products\u0027).to.be.an(\u0027array\u0027);",
+                                                                                    "pm.expect(json.summary.daily_sales, \u0027daily_sales\u0027).to.be.an(\u0027array\u0027);",
+                                                                                    "pm.expect(json.summary.low_stock_products, \u0027low_stock_products\u0027).to.be.an(\u0027array\u0027);",
+                                                                                    "pm.test(\u0027Daily sales length is 7\u0027, () =\u003e pm.expect(json.summary.daily_sales.length).to.eql(7));"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "name":  "HP-DASHBOARD-003 UMKM summary 30 days",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{umkm_access_token}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{user_base_url}}/api/v1/dashboard/umkm/summary?range=30d",
+                                                                  "host":  [
+                                                                               "{{user_base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "api",
+                                                                               "v1",
+                                                                               "dashboard",
+                                                                               "umkm",
+                                                                               "summary"
+                                                                           ],
+                                                                  "query":  [
+                                                                                {
+                                                                                    "key":  "range",
+                                                                                    "value":  "30d"
+                                                                                }
+                                                                            ]
+                                                              }
+                                                  },
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Status code is 200\u0027, () =\u003e pm.response.to.have.status(200));",
+                                                                                    "pm.response.to.be.json;",
+                                                                                    "const json = pm.response.json();",
+                                                                                    "pm.expect(json.summary, \u0027summary\u0027).to.be.an(\u0027object\u0027);",
+                                                                                    "pm.expect(json.summary.period, \u0027period\u0027).to.be.an(\u0027object\u0027);",
+                                                                                    "pm.expect(json.summary.metrics, \u0027metrics\u0027).to.be.an(\u0027object\u0027);",
+                                                                                    "pm.test(\u0027Range is 30d\u0027, () =\u003e pm.expect(json.summary.period.range).to.eql(\u002730d\u0027));",
+                                                                                    "pm.expect(json.summary.period.from, \u0027period.from\u0027).to.be.a(\u0027string\u0027).and.not.empty;",
+                                                                                    "pm.expect(json.summary.period.to, \u0027period.to\u0027).to.be.a(\u0027string\u0027).and.not.empty;",
+                                                                                    "pm.expect(json.summary.metrics.total_omzet, \u0027total_omzet\u0027).to.be.a(\u0027number\u0027);",
+                                                                                    "pm.expect(json.summary.metrics.total_profit, \u0027total_profit\u0027).to.be.a(\u0027number\u0027);",
+                                                                                    "pm.expect(json.summary.metrics.total_item, \u0027total_item\u0027).to.be.a(\u0027number\u0027);",
+                                                                                    "pm.expect(json.summary.metrics.transaction_count, \u0027transaction_count\u0027).to.be.a(\u0027number\u0027);",
+                                                                                    "pm.expect(json.summary.metrics.average_order, \u0027average_order\u0027).to.be.a(\u0027number\u0027);",
+                                                                                    "pm.expect(json.summary.metrics.active_products, \u0027active_products\u0027).to.be.a(\u0027number\u0027);",
+                                                                                    "pm.expect(json.summary.metrics.total_stock, \u0027total_stock\u0027).to.be.a(\u0027number\u0027);",
+                                                                                    "pm.expect(json.summary.metrics.low_stock_count, \u0027low_stock_count\u0027).to.be.a(\u0027number\u0027);",
+                                                                                    "pm.expect(json.summary.recent_sales, \u0027recent_sales\u0027).to.be.an(\u0027array\u0027);",
+                                                                                    "pm.expect(json.summary.top_products, \u0027top_products\u0027).to.be.an(\u0027array\u0027);",
+                                                                                    "pm.expect(json.summary.daily_sales, \u0027daily_sales\u0027).to.be.an(\u0027array\u0027);",
+                                                                                    "pm.expect(json.summary.low_stock_products, \u0027low_stock_products\u0027).to.be.an(\u0027array\u0027);",
+                                                                                    "pm.test(\u0027Daily sales length is 30\u0027, () =\u003e pm.expect(json.summary.daily_sales.length).to.eql(30));"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "name":  "HP-DASHBOARD-004 UMKM summary current month",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{umkm_access_token}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{user_base_url}}/api/v1/dashboard/umkm/summary?range=month",
+                                                                  "host":  [
+                                                                               "{{user_base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "api",
+                                                                               "v1",
+                                                                               "dashboard",
+                                                                               "umkm",
+                                                                               "summary"
+                                                                           ],
+                                                                  "query":  [
+                                                                                {
+                                                                                    "key":  "range",
+                                                                                    "value":  "month"
+                                                                                }
+                                                                            ]
+                                                              }
+                                                  },
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Status code is 200\u0027, () =\u003e pm.response.to.have.status(200));",
+                                                                                    "pm.response.to.be.json;",
+                                                                                    "const json = pm.response.json();",
+                                                                                    "pm.expect(json.summary, \u0027summary\u0027).to.be.an(\u0027object\u0027);",
+                                                                                    "pm.expect(json.summary.period, \u0027period\u0027).to.be.an(\u0027object\u0027);",
+                                                                                    "pm.expect(json.summary.metrics, \u0027metrics\u0027).to.be.an(\u0027object\u0027);",
+                                                                                    "pm.test(\u0027Range is month\u0027, () =\u003e pm.expect(json.summary.period.range).to.eql(\u0027month\u0027));",
+                                                                                    "pm.expect(json.summary.period.from, \u0027period.from\u0027).to.be.a(\u0027string\u0027).and.not.empty;",
+                                                                                    "pm.expect(json.summary.period.to, \u0027period.to\u0027).to.be.a(\u0027string\u0027).and.not.empty;",
+                                                                                    "pm.expect(json.summary.metrics.total_omzet, \u0027total_omzet\u0027).to.be.a(\u0027number\u0027);",
+                                                                                    "pm.expect(json.summary.metrics.total_profit, \u0027total_profit\u0027).to.be.a(\u0027number\u0027);",
+                                                                                    "pm.expect(json.summary.metrics.total_item, \u0027total_item\u0027).to.be.a(\u0027number\u0027);",
+                                                                                    "pm.expect(json.summary.metrics.transaction_count, \u0027transaction_count\u0027).to.be.a(\u0027number\u0027);",
+                                                                                    "pm.expect(json.summary.metrics.average_order, \u0027average_order\u0027).to.be.a(\u0027number\u0027);",
+                                                                                    "pm.expect(json.summary.metrics.active_products, \u0027active_products\u0027).to.be.a(\u0027number\u0027);",
+                                                                                    "pm.expect(json.summary.metrics.total_stock, \u0027total_stock\u0027).to.be.a(\u0027number\u0027);",
+                                                                                    "pm.expect(json.summary.metrics.low_stock_count, \u0027low_stock_count\u0027).to.be.a(\u0027number\u0027);",
+                                                                                    "pm.expect(json.summary.recent_sales, \u0027recent_sales\u0027).to.be.an(\u0027array\u0027);",
+                                                                                    "pm.expect(json.summary.top_products, \u0027top_products\u0027).to.be.an(\u0027array\u0027);",
+                                                                                    "pm.expect(json.summary.daily_sales, \u0027daily_sales\u0027).to.be.an(\u0027array\u0027);",
+                                                                                    "pm.expect(json.summary.low_stock_products, \u0027low_stock_products\u0027).to.be.an(\u0027array\u0027);"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "name":  "AP-DASHBOARD-005 UMKM summary requires auth",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{user_base_url}}/api/v1/dashboard/umkm/summary?range=7d",
+                                                                  "host":  [
+                                                                               "{{user_base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "api",
+                                                                               "v1",
+                                                                               "dashboard",
+                                                                               "umkm",
+                                                                               "summary"
+                                                                           ],
+                                                                  "query":  [
+                                                                                {
+                                                                                    "key":  "range",
+                                                                                    "value":  "7d"
+                                                                                }
+                                                                            ]
+                                                              }
+                                                  },
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Request without token is rejected\u0027, () =\u003e pm.expect([401,403]).to.include(pm.response.code));",
+                                                                                    "pm.response.to.be.json;"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ]
+                                  }
+                              ]
+                 }
+             ]
 }

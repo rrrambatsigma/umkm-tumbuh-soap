@@ -127,17 +127,6 @@ services:
       context: ../services/user-service
       dockerfile: Dockerfile
     restart: unless-stopped
-    entrypoint:
-      - sh
-      - -ec
-      - |
-        test -r /run/garage/garage.env || { echo "Garage credentials are missing; run garage-bootstrap first." >&2; exit 1; }
-        set -a
-        . /run/garage/garage.env
-        set +a
-        : "$${OBJECT_STORAGE_ACCESS_KEY:?Missing Garage access key}"
-        : "$${OBJECT_STORAGE_SECRET_KEY:?Missing Garage secret key}"
-        exec /app/user-api
     environment:
       APP_ENV: ${APP_ENV:-development}
       USER_SERVICE_HOST: 0.0.0.0
@@ -146,55 +135,13 @@ services:
       DATABASE_URL: postgres://${POSTGRES_USER:-umkm_user}:${POSTGRES_PASSWORD:-umkm_password}@postgres:5432/${POSTGRES_DB:-umkm_tumbuh}?sslmode=disable
       JWT_SECRET: ${JWT_SECRET}
       UPLOAD_DIR: /app/uploads
-      OBJECT_STORAGE_ENDPOINT: ${OBJECT_STORAGE_ENDPOINT:-http://garage:3900}
-      OBJECT_STORAGE_PUBLIC_ENDPOINT: ${OBJECT_STORAGE_PUBLIC_ENDPOINT:-http://localhost:3900}
-      OBJECT_STORAGE_REGION: ${OBJECT_STORAGE_REGION:-garage}
-      OBJECT_STORAGE_USE_SSL: ${OBJECT_STORAGE_USE_SSL:-false}
-      OBJECT_STORAGE_BUCKET_PRODUCT_IMAGES: ${OBJECT_STORAGE_BUCKET_PRODUCT_IMAGES:-product-images}
     healthcheck:
       <<: *api-healthcheck
       test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8081/api/v1/health/db"]
     ports:
       - "${HOST_BIND_ADDRESS:-127.0.0.1}:${USER_SERVICE_PORT:-8081}:8081"
     volumes:
-      - type: volume
-        source: garage_credentials
-        target: /run/garage
-        read_only: true
-        volume:
-          nocopy: true
       - uploads_data:/app/uploads
-    depends_on:
-      garage-bootstrap:
-        condition: service_completed_successfully
-      db-migrate:
-        condition: service_completed_successfully
-    networks:
-      - umkm_network
-
-  # ============================================================
-  # Training Service (merged with Certificate Service)
-  # ============================================================
-  training-service:
-    build:
-      context: ../services/training-service
-      dockerfile: Dockerfile
-    restart: unless-stopped
-    environment:
-      APP_ENV: ${APP_ENV:-development}
-      SERVER_HOST: 0.0.0.0
-      TRAINING_SERVICE_PORT: 8084
-      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
-      DATABASE_URL: postgres://${POSTGRES_USER:-umkm_user}:${POSTGRES_PASSWORD:-umkm_password}@postgres:5432/${POSTGRES_DB:-umkm_tumbuh}?sslmode=disable
-      JWT_SECRET: ${JWT_SECRET}
-      CERTIFICATE_DIR: /app/certificates
-    volumes:
-      - certificates_data:/app/certificates
-    healthcheck:
-      <<: *api-healthcheck
-      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8084/api/v1/health"]
-    ports:
-      - "${HOST_BIND_ADDRESS:-127.0.0.1}:${TRAINING_SERVICE_PORT:-8084}:8084"
     depends_on:
       db-migrate:
         condition: service_completed_successfully
@@ -250,8 +197,6 @@ services:
     environment:
       GARAGE_ADMIN_TOKEN: ${GARAGE_ADMIN_TOKEN:-CHANGE_ME_LOCAL_GARAGE_ADMIN_TOKEN}
       OBJECT_STORAGE_BUCKET_DOCUMENTS: ${OBJECT_STORAGE_BUCKET_DOCUMENTS:-documents}
-      OBJECT_STORAGE_BUCKET_CERTIFICATES: ${OBJECT_STORAGE_BUCKET_CERTIFICATES:-certificates}
-      OBJECT_STORAGE_BUCKET_PRODUCT_IMAGES: ${OBJECT_STORAGE_BUCKET_PRODUCT_IMAGES:-product-images}
       OBJECT_STORAGE_BUCKET_PARTNERSHIP_FILES: ${OBJECT_STORAGE_BUCKET_PARTNERSHIP_FILES:-partnership-files}
     networks:
       - umkm_network
@@ -314,7 +259,6 @@ volumes:
   uploads_data:
   garage_data:
   garage_credentials:
-  certificates_data:
 
 networks:
   umkm_network:

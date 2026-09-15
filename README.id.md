@@ -2,7 +2,7 @@
 
 [English](README.md) | **Bahasa Indonesia**
 
-Platform untuk mengelola usaha mikro, kecil, dan menengah (UMKM), kerja sama mitra, pelatihan, dokumen, serta dasbor usaha. Frontend menggunakan React dan TypeScript; lima layanan Go berbagi basis data PostgreSQL. Garage menyediakan penyimpanan yang kompatibel dengan S3, sedangkan Mailpit menerima email selama pengembangan.
+Platform untuk mengelola usaha mikro, kecil, dan menengah (UMKM), kerja sama mitra, dokumen, serta dasbor usaha. Frontend menggunakan React dan TypeScript; empat layanan Go berbagi basis data PostgreSQL. Garage menyediakan penyimpanan yang kompatibel dengan S3, sedangkan Mailpit menerima email selama pengembangan.
 
 ## Menjalankan secara lokal
 
@@ -36,10 +36,9 @@ Lihat [panduan pengembangan lokal](docs/README_LOCAL_DEV.id.md) untuk variabel k
 | --- | --- | --- |
 | Frontend | http://localhost:5173 | Aplikasi React |
 | Auth service | http://localhost:8080/api/v1 | Autentikasi dan API admin |
-| User service | http://localhost:8081/api/v1 | Profil, produk, penjualan, dan dasbor |
+| User service | http://localhost:8081/api/v1 | Profil dan dasbor |
 | Partnerships service | http://localhost:8082/api/v1 | Pengajuan dan pengelolaan kerja sama |
 | Document service | http://localhost:8083/api/v1 | Unggah dan unduh dokumen |
-| Training service | http://localhost:8084/api/v1 | Pelatihan, pendaftaran, dan sertifikat |
 | PostgreSQL | localhost:5432 | Basis data bersama |
 | Garage | http://localhost:3900 / http://localhost:3903 | API S3 / API admin |
 | Mailpit | http://localhost:8025 | Kotak masuk email pengembangan; SMTP menggunakan port 1025 |
@@ -52,10 +51,9 @@ Port backend yang dipublikasikan hanya menerima koneksi melalui `127.0.0.1` seca
 | --- | --- |
 | [frontend/](frontend/) | React 18, TypeScript, Vite, Tailwind CSS, dan modul fitur |
 | [services/auth-service/](services/auth-service/) | Autentikasi akun dan operasi admin |
-| [services/user-service/](services/user-service/) | Profil, produk, penjualan, dan dasbor |
+| [services/user-service/](services/user-service/) | Profil dan dasbor |
 | [services/partnerships-service/](services/partnerships-service/) | API kerja sama |
 | [services/document-service/](services/document-service/) | API berkas dengan penyimpanan Garage |
-| [services/training-service/](services/training-service/) | Pelatihan dan sertifikat |
 | [infra/db/migrations/](infra/db/migrations/) | Skema PostgreSQL bersama dan data referensi |
 | [infra/garage/](infra/garage/) | Konfigurasi dan penyiapan awal Garage |
 | [tests/stack/](tests/stack/) | Pengujian integrasi Stage 1 dan data uji terisolasi |
@@ -69,7 +67,7 @@ Proses build Docker menggunakan Go 1.26.3. PostgreSQL menggunakan versi 16, seda
 bash tests/stack/run.sh
 ```
 
-Skrip ini membangun proyek pengujian terpisah dengan enam akun fixture dan satu akun yang didaftarkan oleh Newman, menjalankan koleksi berisi 37 permintaan API, memeriksa kelima API, mengunggah dan mengunduh berkas melalui kedua layanan pengguna penyimpanan, menjalankan ulang migrasi dan bootstrap, lalu membuat ulang container untuk memeriksa ketahanan data. Skrip menggunakan `.env.example` dan konfigurasi pengujian tambahan, tidak memublikasikan port host, serta membersihkan container dan volume pengujiannya.
+Skrip ini membangun proyek pengujian terpisah dengan enam akun fixture dan satu akun yang didaftarkan oleh Newman, menjalankan koleksi permintaan API, memeriksa keempat layanan, mengunggah dan mengunduh berkas melalui layanan penyimpanan, menjalankan ulang migrasi dan bootstrap, lalu membuat ulang container untuk memeriksa ketahanan data. Skrip menggunakan `.env.example` dan konfigurasi pengujian tambahan, tidak memublikasikan port host, serta membersihkan container dan volume pengujiannya.
 
 Pada pemeriksaan basis data yang salah, pesan berikut memang diharapkan:
 
@@ -124,7 +122,6 @@ Seed CSV berukuran besar bersifat opsional dan mengganti data aplikasi. Seed ini
 | Otorisasi Stage 2 | [Read](docs/README_AUTHORIZATION.md) | [Baca](docs/README_AUTHORIZATION.id.md) |
 | Frontend | [Read](frontend/README.md) | [Baca](frontend/README.id.md) |
 | Basis data | [Read](infra/db/README.md) | [Baca](infra/db/README.id.md) |
-| Training service | [Read](services/training-service/README.md) | [Baca](services/training-service/README.id.md) |
 | Postman/Newman | [Read](tests/postman/README.md) | [Baca](tests/postman/README.id.md) |
 | Catatan seed CSV | [Read](infra/db/dummy/seed-csv/README.txt) | [Baca](infra/db/dummy/seed-csv/README.id.txt) |
 

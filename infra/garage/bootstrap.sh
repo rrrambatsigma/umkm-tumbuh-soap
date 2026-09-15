@@ -64,8 +64,6 @@ SECRET_KEY="$(printf '%s' "$KEY" | jq -r '.secretAccessKey')"
 
 for bucket in \
   "${OBJECT_STORAGE_BUCKET_DOCUMENTS:-documents}" \
-  "${OBJECT_STORAGE_BUCKET_CERTIFICATES:-certificates}" \
-  "${OBJECT_STORAGE_BUCKET_PRODUCT_IMAGES:-product-images}" \
   "${OBJECT_STORAGE_BUCKET_PARTNERSHIP_FILES:-partnership-files}"; do
   BUCKETS="$(api GET ListBuckets)"
   BUCKET_ID="$(printf '%s' "$BUCKETS" | jq -r --arg name "$bucket" \

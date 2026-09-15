@@ -27,16 +27,6 @@ const DOCUMENT_API_BASE_URL =
   import.meta.env.VITE_DOCUMENT_API_BASE_URL ??
   "http://localhost:8083/api/v1";
 
-const TRAINING_API_BASE_URL =
-  import.meta.env.VITE_TRAINING_API_BASE_URL ??
-  import.meta.env.VITE_TRAINING_API_URL ??
-  "http://localhost:8084/api/v1";
-
-const CERTIFICATE_API_BASE_URL =
-  import.meta.env.VITE_CERTIFICATE_API_BASE_URL ??
-  import.meta.env.VITE_CERTIFICATE_API_URL ??
-  TRAINING_API_BASE_URL;
-
 // ⭐ EXPORT base URL sebagai string — dipakai langsung di template literal
 // oleh file-file seperti documents.ts: `${USER_API}/profile/...`
 export const AUTH_API = AUTH_API_BASE_URL;
@@ -44,8 +34,6 @@ export const ADMIN_API = ADMIN_API_BASE_URL;
 export const USER_API = USER_API_BASE_URL;
 export const PARTNERSHIP_API = PARTNERSHIP_API_BASE_URL;
 export const DOCUMENT_API = DOCUMENT_API_BASE_URL;
-export const TRAINING_API = TRAINING_API_BASE_URL;
-export const CERTIFICATE_API = CERTIFICATE_API_BASE_URL;
 
 export type ServiceName =
   | "default"
@@ -53,9 +41,7 @@ export type ServiceName =
   | "admin"
   | "user"
   | "partnership"
-  | "document"
-  | "training"
-  | "certificate";
+  | "document";
 
 export type RequestOptions = RequestInit & {
   auth?: boolean;
@@ -146,10 +132,6 @@ function getBaseURL(service: ServiceName = "default"): string {
       return PARTNERSHIP_API_BASE_URL;
     case "document":
       return DOCUMENT_API_BASE_URL;
-    case "training":
-      return TRAINING_API_BASE_URL;
-    case "certificate":
-      return CERTIFICATE_API_BASE_URL;
     default:
       return API_BASE_URL;
   }

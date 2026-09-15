@@ -10,7 +10,6 @@ export default defineConfig(({ command, mode, isPreview }) => {
     "USER_SERVICE_PORT",
     "PARTNERSHIP_SERVICE_PORT",
     "DOCUMENT_SERVICE_PORT",
-    "TRAINING_SERVICE_PORT",
   ]);
   const useDevProxy = command === "serve" && !isPreview &&
     frontendEnv.VITE_USE_DEV_PROXY === "true";
@@ -20,7 +19,6 @@ export default defineConfig(({ command, mode, isPreview }) => {
     user: `http://127.0.0.1:${backendEnv.USER_SERVICE_PORT || "8081"}`,
     partnership: `http://127.0.0.1:${backendEnv.PARTNERSHIP_SERVICE_PORT || "8082"}`,
     document: `http://127.0.0.1:${backendEnv.DOCUMENT_SERVICE_PORT || "8083"}`,
-    training: `http://127.0.0.1:${backendEnv.TRAINING_SERVICE_PORT || "8084"}`,
   };
   const apiServices = {
     VITE_AUTH_API_BASE_URL: "auth",
@@ -28,8 +26,6 @@ export default defineConfig(({ command, mode, isPreview }) => {
     VITE_USER_API_BASE_URL: "user",
     VITE_PARTNERSHIP_API_BASE_URL: "partnership",
     VITE_DOCUMENT_API_BASE_URL: "document",
-    VITE_TRAINING_API_BASE_URL: "training",
-    VITE_CERTIFICATE_API_BASE_URL: "training",
     VITE_API_BASE_URL: "partnership",
   } as const;
   const proxy: Record<string, ProxyOptions> = {};
@@ -49,9 +45,6 @@ export default defineConfig(({ command, mode, isPreview }) => {
     "/api/v1/auth": "auth",
     "/api/v1/admin": "auth",
     "/api/v1/profiles": "user",
-    "/api/v1/products": "user",
-    "/api/v1/public/products": "user",
-    "/api/v1/sales": "user",
     "/api/v1/dashboard": "user",
     "/api/v1/register": "user",
     "/api/v1/partnerships": "partnership",
@@ -59,9 +52,6 @@ export default defineConfig(({ command, mode, isPreview }) => {
     "/api/v1/umkm": "user",
     "/api/v1/documents": "document",
     "/api/v1/public/documents": "document",
-    "/api/v1/trainings": "training",
-    "/api/v1/enrollments": "training",
-    "/api/v1/certificates": "training",
   } as const;
   for (const [prefix, service] of Object.entries(legacyRoutes)) {
     proxy[prefix] = { target: targets[service], changeOrigin: true };

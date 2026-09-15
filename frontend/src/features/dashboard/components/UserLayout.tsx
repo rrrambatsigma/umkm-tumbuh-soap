@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import type { ReactNode } from "react";
-import { BookOpen, Bell, Handshake, LayoutDashboard, LogOut, Search, Settings2, User2 } from "lucide-react";
+import { Bell, Handshake, LayoutDashboard, LogOut, Search, Settings2, User2 } from "lucide-react";
 import { getCurrentUser, clearAuthStorage } from "../../../shared/auth/currentUser";
 import type { UserRole } from "../../../shared/auth/currentUser";
 import { logout as logoutApi } from "../../auth/api";
@@ -9,7 +9,6 @@ type NavItem = { label: string; to: string; icon: ReactNode };
 
 const umkmNav: NavItem[] = [
   { label: "Dashboard", to: "/umkm", icon: <LayoutDashboard size={18} /> },
-  { label: "Pelatihan Saya", to: "/umkm/trainings", icon: <BookOpen size={18} /> },
   { label: "Kelola Informasi", to: "/umkm/profile", icon: <User2 size={18} /> },
   { label: "Pengajuan Kemitraan", to: "/umkm/partnerships", icon: <Handshake size={18} /> },
   { label: "Pengaturan", to: "/umkm/settings", icon: <Settings2 size={18} /> },

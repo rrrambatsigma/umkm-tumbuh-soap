@@ -131,7 +131,7 @@ Akun tersebut hanya ada dalam proyek pengujian selama skrip berjalan. `tests/sta
 
 ```bash
 docker compose --env-file .env -f infra/docker-compose.yml logs --tail 80 db-migrate garage garage-bootstrap
-docker compose --env-file .env -f infra/docker-compose.yml logs --tail 80 auth-service user-service partnerships-service document-service training-service
+docker compose --env-file .env -f infra/docker-compose.yml logs --tail 80 auth-service user-service partnerships-service document-service
 ```
 
 Jika port sudah digunakan, ubah variabel port host lalu jalankan ulang `up`. Jika API tetap unhealthy, baca log layanan tersebut sebelum mengubah data atau kredensial. Pesan `unknown tag !reset` berarti Compose perlu diperbarui ke versi minimal 2.24.4 agar dapat membaca konfigurasi tambahan untuk pengujian terisolasi.

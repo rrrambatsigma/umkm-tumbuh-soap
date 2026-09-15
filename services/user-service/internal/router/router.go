@@ -13,9 +13,7 @@ import (
 	"github.com/savitar393/umkm-tumbuh/services/user-service/internal/documents"
 	"github.com/savitar393/umkm-tumbuh/services/user-service/internal/health"
 	"github.com/savitar393/umkm-tumbuh/services/user-service/internal/middleware"
-	"github.com/savitar393/umkm-tumbuh/services/user-service/internal/products"
 	"github.com/savitar393/umkm-tumbuh/services/user-service/internal/profiles"
-	"github.com/savitar393/umkm-tumbuh/services/user-service/internal/sales"
 )
 
 func New(db *pgxpool.Pool, frontendURL string, jwtSecret string, uploadDir string) http.Handler {
@@ -33,17 +31,13 @@ func New(db *pgxpool.Pool, frontendURL string, jwtSecret string, uploadDir strin
 
 	healthHandler := health.NewHandler(db)
 	profileHandler := profiles.NewHandler(db)
-	productHandler := products.NewHandler(db)
-	salesHandler := sales.NewHandler(db)
 	dashboardHandler := dashboard.NewHandler(db)
 	adminProfileHandler := adminprofiles.NewHandler(db)
 	docHandler := documents.NewHandler(db, uploadDir)
 
-	r.Route("/api/v1", func(r chi.Router) {
+		r.Route("/api/v1", func(r chi.Router) {
 		r.Get("/health", healthHandler.ServiceHealth)
 		r.Get("/health/db", healthHandler.DatabaseHealth)
-
-		r.Get("/public/products/{id}/thumbnail", productHandler.GetPublicThumbnail)
 
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.Auth(jwtSecret))
@@ -58,26 +52,6 @@ func New(db *pgxpool.Pool, frontendURL string, jwtSecret string, uploadDir strin
 			r.Route("/register", func(r chi.Router) {
 				r.Get("/status", profileHandler.GetRegistrationStatus)
 				r.Post("/submit", profileHandler.SubmitRegistration)
-			})
-
-			r.Route("/products", func(r chi.Router) {
-				r.Get("/", productHandler.List)
-				r.Post("/", productHandler.Create)
-				r.Get("/{id}", productHandler.Get)
-				r.Put("/{id}", productHandler.Update)
-				r.Patch("/{id}/stock", productHandler.UpdateStock)
-				r.Patch("/{id}/featured", productHandler.ToggleFeatured)
-				r.Delete("/{id}", productHandler.Delete)
-				r.Get("/{id}/thumbnail", productHandler.GetThumbnail)
-				r.Post("/{id}/thumbnail", productHandler.UploadThumbnail)
-				r.Patch("/{id}/thumbnail", productHandler.AttachThumbnail)
-				r.Delete("/{id}/thumbnail", productHandler.DeleteThumbnail)
-			})
-
-			r.Route("/sales", func(r chi.Router) {
-				r.Get("/", salesHandler.List)
-				r.Post("/", salesHandler.Create)
-				r.Get("/{id}", salesHandler.Get)
 			})
 
 			r.Route("/dashboard", func(r chi.Router) {
