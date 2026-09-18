@@ -1,0 +1,547 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions 
+    xmlns="http://schemas.xmlsoap.org/wsdl/"
+    xmlns:tns="http://umkm-tumbuh.example.com/partnerships"
+    xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+    targetNamespace="http://umkm-tumbuh.example.com/partnerships"
+    name="PartnershipService">
+
+    <!-- ============================================================
+         TYPES - Define XML Schema for request/response messages
+         ============================================================ -->
+    <types>
+        <xsd:schema targetNamespace="http://umkm-tumbuh.example.com/partnerships">
+
+            <!-- ===== Request Types ===== -->
+
+            <!-- CreatePartnershipApplication Request -->
+            <xsd:element name="CreatePartnershipApplication">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element name="userId" type="xsd:string"/>
+                        <xsd:element name="userRole" type="xsd:string"/>
+                        <xsd:element name="receiverId" type="xsd:string"/>
+                        <xsd:element name="proposalTitle" type="xsd:string"/>
+                        <xsd:element name="proposalDescription" type="xsd:string"/>
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+
+            <!-- GetPartnershipApplication Request -->
+            <xsd:element name="GetPartnershipApplication">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element name="userId" type="xsd:string"/>
+                        <xsd:element name="userRole" type="xsd:string"/>
+                        <xsd:element name="applicationId" type="xsd:string"/>
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+
+            <!-- GetPartnershipApplications Request -->
+            <xsd:element name="GetPartnershipApplications">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element name="userId" type="xsd:string"/>
+                        <xsd:element name="userRole" type="xsd:string"/>
+                        <xsd:element name="status" type="xsd:string" minOccurs="0"/>
+                        <xsd:element name="page" type="xsd:int" minOccurs="0"/>
+                        <xsd:element name="limit" type="xsd:int" minOccurs="0"/>
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+
+            <!-- GetIncomingPartnerships Request -->
+            <xsd:element name="GetIncomingPartnerships">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element name="userId" type="xsd:string"/>
+                        <xsd:element name="userRole" type="xsd:string"/>
+                        <xsd:element name="status" type="xsd:string" minOccurs="0"/>
+                        <xsd:element name="page" type="xsd:int" minOccurs="0"/>
+                        <xsd:element name="limit" type="xsd:int" minOccurs="0"/>
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+
+            <!-- UpdatePartnershipStatus Request -->
+            <xsd:element name="UpdatePartnershipStatus">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element name="userId" type="xsd:string"/>
+                        <xsd:element name="userRole" type="xsd:string"/>
+                        <xsd:element name="applicationId" type="xsd:string"/>
+                        <xsd:element name="status" type="xsd:string"/>
+                        <xsd:element name="rejectionReason" type="xsd:string" minOccurs="0"/>
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+
+            <!-- MarkPartnershipAsRead Request -->
+            <xsd:element name="MarkPartnershipAsRead">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element name="userId" type="xsd:string"/>
+                        <xsd:element name="userRole" type="xsd:string"/>
+                        <xsd:element name="applicationId" type="xsd:string"/>
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+
+            <!-- SignPartnership Request -->
+            <xsd:element name="SignPartnership">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element name="userId" type="xsd:string"/>
+                        <xsd:element name="userRole" type="xsd:string"/>
+                        <xsd:element name="applicationId" type="xsd:string"/>
+                        <xsd:element name="documentId" type="xsd:string"/>
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+
+            <!-- GetPartnershipSummary Request -->
+            <xsd:element name="GetPartnershipSummary">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element name="userId" type="xsd:string"/>
+                        <xsd:element name="userRole" type="xsd:string"/>
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+
+            <!-- GetIncomingPartnershipSummary Request -->
+            <xsd:element name="GetIncomingPartnershipSummary">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element name="userId" type="xsd:string"/>
+                        <xsd:element name="userRole" type="xsd:string"/>
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+
+            <!-- ===== Response Types ===== -->
+
+            <!-- CreatePartnershipApplication Response -->
+            <xsd:element name="CreatePartnershipApplicationResponse">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element name="success" type="xsd:boolean"/>
+                        <xsd:element name="applicationId" type="xsd:string"/>
+                        <xsd:element name="requestCode" type="xsd:string"/>
+                        <xsd:element name="status" type="xsd:string"/>
+                        <xsd:element name="message" type="xsd:string"/>
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+
+            <!-- GetPartnershipApplication Response -->
+            <xsd:element name="GetPartnershipApplicationResponse">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element name="applicationId" type="xsd:string"/>
+                        <xsd:element name="requestCode" type="xsd:string"/>
+                        <xsd:element name="requesterId" type="xsd:string"/>
+                        <xsd:element name="receiverId" type="xsd:string"/>
+                        <xsd:element name="requesterName" type="xsd:string"/>
+                        <xsd:element name="receiverName" type="xsd:string"/>
+                        <xsd:element name="proposalText" type="xsd:string"/>
+                        <xsd:element name="status" type="xsd:string"/>
+                        <xsd:element name="rejectionReason" type="xsd:string" minOccurs="0"/>
+                        <xsd:element name="contractDocumentId" type="xsd:string" minOccurs="0"/>
+                        <xsd:element name="submittedAt" type="xsd:string" minOccurs="0"/>
+                        <xsd:element name="decidedAt" type="xsd:string" minOccurs="0"/>
+                        <xsd:element name="createdAt" type="xsd:string"/>
+                        <xsd:element name="updatedAt" type="xsd:string"/>
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+
+            <!-- Partnership List Item -->
+            <xsd:complexType name="PartnershipListItem">
+                <xsd:sequence>
+                    <xsd:element name="applicationId" type="xsd:string"/>
+                    <xsd:element name="requestCode" type="xsd:string"/>
+                    <xsd:element name="requesterName" type="xsd:string"/>
+                    <xsd:element name="receiverName" type="xsd:string"/>
+                    <xsd:element name="requesterBusinessName" type="xsd:string"/>
+                    <xsd:element name="receiverBusinessName" type="xsd:string"/>
+                    <xsd:element name="proposalTitle" type="xsd:string"/>
+                    <xsd:element name="status" type="xsd:string"/>
+                    <xsd:element name="submittedAt" type="xsd:string" minOccurs="0"/>
+                    <xsd:element name="decidedAt" type="xsd:string" minOccurs="0"/>
+                </xsd:sequence>
+            </xsd:complexType>
+
+            <!-- GetPartnershipApplications Response -->
+            <xsd:element name="GetPartnershipApplicationsResponse">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element name="totalCount" type="xsd:int"/>
+                        <xsd:element name="applications">
+                            <xsd:complexType>
+                                <xsd:sequence>
+                                    <xsd:element name="application" type="tns:PartnershipListItem" minOccurs="0" maxOccurs="unbounded"/>
+                                </xsd:sequence>
+                            </xsd:complexType>
+                        </xsd:element>
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+
+            <!-- GetIncomingPartnerships Response -->
+            <xsd:element name="GetIncomingPartnershipsResponse">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element name="totalCount" type="xsd:int"/>
+                        <xsd:element name="applications">
+                            <xsd:complexType>
+                                <xsd:sequence>
+                                    <xsd:element name="application" type="tns:PartnershipListItem" minOccurs="0" maxOccurs="unbounded"/>
+                                </xsd:sequence>
+                            </xsd:complexType>
+                        </xsd:element>
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+
+            <!-- UpdatePartnershipStatus Response -->
+            <xsd:element name="UpdatePartnershipStatusResponse">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element name="success" type="xsd:boolean"/>
+                        <xsd:element name="applicationId" type="xsd:string"/>
+                        <xsd:element name="status" type="xsd:string"/>
+                        <xsd:element name="message" type="xsd:string"/>
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+
+            <!-- MarkPartnershipAsRead Response -->
+            <xsd:element name="MarkPartnershipAsReadResponse">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element name="success" type="xsd:boolean"/>
+                        <xsd:element name="applicationId" type="xsd:string"/>
+                        <xsd:element name="message" type="xsd:string"/>
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+
+            <!-- SignPartnership Response -->
+            <xsd:element name="SignPartnershipResponse">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element name="success" type="xsd:boolean"/>
+                        <xsd:element name="applicationId" type="xsd:string"/>
+                        <xsd:element name="message" type="xsd:string"/>
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+
+            <!-- Summary Item -->
+            <xsd:complexType name="SummaryItem">
+                <xsd:sequence>
+                    <xsd:element name="status" type="xsd:string"/>
+                    <xsd:element name="count" type="xsd:int"/>
+                </xsd:sequence>
+            </xsd:complexType>
+
+            <!-- GetPartnershipSummary Response -->
+            <xsd:element name="GetPartnershipSummaryResponse">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element name="summary">
+                            <xsd:complexType>
+                                <xsd:sequence>
+                                    <xsd:element name="item" type="tns:SummaryItem" minOccurs="0" maxOccurs="unbounded"/>
+                                </xsd:sequence>
+                            </xsd:complexType>
+                        </xsd:element>
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+
+            <!-- GetIncomingPartnershipSummary Response -->
+            <xsd:element name="GetIncomingPartnershipSummaryResponse">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element name="summary">
+                            <xsd:complexType>
+                                <xsd:sequence>
+                                    <xsd:element name="item" type="tns:SummaryItem" minOccurs="0" maxOccurs="unbounded"/>
+                                </xsd:sequence>
+                            </xsd:complexType>
+                        </xsd:element>
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+
+        </xsd:schema>
+    </types>
+
+    <!-- ============================================================
+         MESSAGES - Define request/response messages
+         ============================================================ -->
+
+    <!-- CreatePartnershipApplication Messages -->
+    <message name="CreatePartnershipApplicationRequest">
+        <part name="body" element="tns:CreatePartnershipApplication"/>
+    </message>
+    <message name="CreatePartnershipApplicationResponse">
+        <part name="body" element="tns:CreatePartnershipApplicationResponse"/>
+    </message>
+
+    <!-- GetPartnershipApplication Messages -->
+    <message name="GetPartnershipApplicationRequest">
+        <part name="body" element="tns:GetPartnershipApplication"/>
+    </message>
+    <message name="GetPartnershipApplicationResponse">
+        <part name="body" element="tns:GetPartnershipApplicationResponse"/>
+    </message>
+
+    <!-- GetPartnershipApplications Messages -->
+    <message name="GetPartnershipApplicationsRequest">
+        <part name="body" element="tns:GetPartnershipApplications"/>
+    </message>
+    <message name="GetPartnershipApplicationsResponse">
+        <part name="body" element="tns:GetPartnershipApplicationsResponse"/>
+    </message>
+
+    <!-- GetIncomingPartnerships Messages -->
+    <message name="GetIncomingPartnershipsRequest">
+        <part name="body" element="tns:GetIncomingPartnerships"/>
+    </message>
+    <message name="GetIncomingPartnershipsResponse">
+        <part name="body" element="tns:GetIncomingPartnershipsResponse"/>
+    </message>
+
+    <!-- UpdatePartnershipStatus Messages -->
+    <message name="UpdatePartnershipStatusRequest">
+        <part name="body" element="tns:UpdatePartnershipStatus"/>
+    </message>
+    <message name="UpdatePartnershipStatusResponse">
+        <part name="body" element="tns:UpdatePartnershipStatusResponse"/>
+    </message>
+
+    <!-- MarkPartnershipAsRead Messages -->
+    <message name="MarkPartnershipAsReadRequest">
+        <part name="body" element="tns:MarkPartnershipAsRead"/>
+    </message>
+    <message name="MarkPartnershipAsReadResponse">
+        <part name="body" element="tns:MarkPartnershipAsReadResponse"/>
+    </message>
+
+    <!-- SignPartnership Messages -->
+    <message name="SignPartnershipRequest">
+        <part name="body" element="tns:SignPartnership"/>
+    </message>
+    <message name="SignPartnershipResponse">
+        <part name="body" element="tns:SignPartnershipResponse"/>
+    </message>
+
+    <!-- GetPartnershipSummary Messages -->
+    <message name="GetPartnershipSummaryRequest">
+        <part name="body" element="tns:GetPartnershipSummary"/>
+    </message>
+    <message name="GetPartnershipSummaryResponse">
+        <part name="body" element="tns:GetPartnershipSummaryResponse"/>
+    </message>
+
+    <!-- GetIncomingPartnershipSummary Messages -->
+    <message name="GetIncomingPartnershipSummaryRequest">
+        <part name="body" element="tns:GetIncomingPartnershipSummary"/>
+    </message>
+    <message name="GetIncomingPartnershipSummaryResponse">
+        <part name="body" element="tns:GetIncomingPartnershipSummaryResponse"/>
+    </message>
+
+    <!-- ============================================================
+         PORT TYPE - Define abstract operations
+         ============================================================ -->
+    <portType name="PartnershipServicePortType">
+
+        <!-- CreatePartnershipApplication Operation -->
+        <operation name="CreatePartnershipApplication">
+            <documentation>Membuat pengajuan kemitraan baru</documentation>
+            <input message="tns:CreatePartnershipApplicationRequest"/>
+            <output message="tns:CreatePartnershipApplicationResponse"/>
+        </operation>
+
+        <!-- GetPartnershipApplication Operation -->
+        <operation name="GetPartnershipApplication">
+            <documentation>Mendapatkan detail pengajuan kemitraan</documentation>
+            <input message="tns:GetPartnershipApplicationRequest"/>
+            <output message="tns:GetPartnershipApplicationResponse"/>
+        </operation>
+
+        <!-- GetPartnershipApplications Operation -->
+        <operation name="GetPartnershipApplications">
+            <documentation>Mendapatkan daftar pengajuan keluar (requester view)</documentation>
+            <input message="tns:GetPartnershipApplicationsRequest"/>
+            <output message="tns:GetPartnershipApplicationsResponse"/>
+        </operation>
+
+        <!-- GetIncomingPartnerships Operation -->
+        <operation name="GetIncomingPartnerships">
+            <documentation>Mendapatkan daftar pengajuan masuk (receiver/inbox view)</documentation>
+            <input message="tns:GetIncomingPartnershipsRequest"/>
+            <output message="tns:GetIncomingPartnershipsResponse"/>
+        </operation>
+
+        <!-- UpdatePartnershipStatus Operation -->
+        <operation name="UpdatePartnershipStatus">
+            <documentation>Mengubah status pengajuan (approve/reject/cancel)</documentation>
+            <input message="tns:UpdatePartnershipStatusRequest"/>
+            <output message="tns:UpdatePartnershipStatusResponse"/>
+        </operation>
+
+        <!-- MarkPartnershipAsRead Operation -->
+        <operation name="MarkPartnershipAsRead">
+            <documentation>Menandai pengajuan sebagai sudah dibaca</documentation>
+            <input message="tns:MarkPartnershipAsReadRequest"/>
+            <output message="tns:MarkPartnershipAsReadResponse"/>
+        </operation>
+
+        <!-- SignPartnership Operation -->
+        <operation name="SignPartnership">
+            <documentation>Mengunggah dokumen kontrak yang sudah ditandatangani</documentation>
+            <input message="tns:SignPartnershipRequest"/>
+            <output message="tns:SignPartnershipResponse"/>
+        </operation>
+
+        <!-- GetPartnershipSummary Operation -->
+        <operation name="GetPartnershipSummary">
+            <documentation>Mendapatkan ringkasan pengajuan keluar per status</documentation>
+            <input message="tns:GetPartnershipSummaryRequest"/>
+            <output message="tns:GetPartnershipSummaryResponse"/>
+        </operation>
+
+        <!-- GetIncomingPartnershipSummary Operation -->
+        <operation name="GetIncomingPartnershipSummary">
+            <documentation>Mendapatkan ringkasan pengajuan masuk per status</documentation>
+            <input message="tns:GetIncomingPartnershipSummaryRequest"/>
+            <output message="tns:GetIncomingPartnershipSummaryResponse"/>
+        </operation>
+
+    </portType>
+
+    <!-- ============================================================
+         BINDING - Define concrete protocol and data format (SOAP 1.1)
+         ============================================================ -->
+    <binding name="PartnershipServiceBinding" type="tns:PartnershipServicePortType">
+        <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+
+        <!-- CreatePartnershipApplication Binding -->
+        <operation name="CreatePartnershipApplication">
+            <soap:operation soapAction="http://umkm-tumbuh.example.com/partnerships/CreatePartnershipApplication"/>
+            <input>
+                <soap:body use="literal"/>
+            </input>
+            <output>
+                <soap:body use="literal"/>
+            </output>
+        </operation>
+
+        <!-- GetPartnershipApplication Binding -->
+        <operation name="GetPartnershipApplication">
+            <soap:operation soapAction="http://umkm-tumbuh.example.com/partnerships/GetPartnershipApplication"/>
+            <input>
+                <soap:body use="literal"/>
+            </input>
+            <output>
+                <soap:body use="literal"/>
+            </output>
+        </operation>
+
+        <!-- GetPartnershipApplications Binding -->
+        <operation name="GetPartnershipApplications">
+            <soap:operation soapAction="http://umkm-tumbuh.example.com/partnerships/GetPartnershipApplications"/>
+            <input>
+                <soap:body use="literal"/>
+            </input>
+            <output>
+                <soap:body use="literal"/>
+            </output>
+        </operation>
+
+        <!-- GetIncomingPartnerships Binding -->
+        <operation name="GetIncomingPartnerships">
+            <soap:operation soapAction="http://umkm-tumbuh.example.com/partnerships/GetIncomingPartnerships"/>
+            <input>
+                <soap:body use="literal"/>
+            </input>
+            <output>
+                <soap:body use="literal"/>
+            </output>
+        </operation>
+
+        <!-- UpdatePartnershipStatus Binding -->
+        <operation name="UpdatePartnershipStatus">
+            <soap:operation soapAction="http://umkm-tumbuh.example.com/partnerships/UpdatePartnershipStatus"/>
+            <input>
+                <soap:body use="literal"/>
+            </input>
+            <output>
+                <soap:body use="literal"/>
+            </output>
+        </operation>
+
+        <!-- MarkPartnershipAsRead Binding -->
+        <operation name="MarkPartnershipAsRead">
+            <soap:operation soapAction="http://umkm-tumbuh.example.com/partnerships/MarkPartnershipAsRead"/>
+            <input>
+                <soap:body use="literal"/>
+            </input>
+            <output>
+                <soap:body use="literal"/>
+            </output>
+        </operation>
+
+        <!-- SignPartnership Binding -->
+        <operation name="SignPartnership">
+            <soap:operation soapAction="http://umkm-tumbuh.example.com/partnerships/SignPartnership"/>
+            <input>
+                <soap:body use="literal"/>
+            </input>
+            <output>
+                <soap:body use="literal"/>
+            </output>
+        </operation>
+
+        <!-- GetPartnershipSummary Binding -->
+        <operation name="GetPartnershipSummary">
+            <soap:operation soapAction="http://umkm-tumbuh.example.com/partnerships/GetPartnershipSummary"/>
+            <input>
+                <soap:body use="literal"/>
+            </input>
+            <output>
+                <soap:body use="literal"/>
+            </output>
+        </operation>
+
+        <!-- GetIncomingPartnershipSummary Binding -->
+        <operation name="GetIncomingPartnershipSummary">
+            <soap:operation soapAction="http://umkm-tumbuh.example.com/partnerships/GetIncomingPartnershipSummary"/>
+            <input>
+                <soap:body use="literal"/>
+            </input>
+            <output>
+                <soap:body use="literal"/>
+            </output>
+        </operation>
+
+    </binding>
+
+    <!-- ============================================================
+         SERVICE - Endpoint information
+         ============================================================ -->
+    <service name="PartnershipService">
+        <documentation>SOAP Web Service untuk Fitur Kemitraan UMKM</documentation>
+        <port name="PartnershipServicePort" binding="tns:PartnershipServiceBinding">
+            <soap:address location="http://localhost:9090/partnership"/>
+        </port>
+    </service>
+
+</definitions>
