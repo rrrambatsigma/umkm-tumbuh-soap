@@ -15,8 +15,9 @@ import (
 func main() {
 	cfg := config.Load()
 
-	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(context.Background(), cfg.DatabaseTimeout)
 	pool, err := database.Connect(ctx, cfg.DatabaseURL)
+	cancel()
 	if err != nil {
 		log.Fatalf("Database connection failed: %v", err)
 	}
@@ -32,7 +33,11 @@ func main() {
 	// Wire up layers
 	repo := partnerships.NewRepository(pool)
 	svc := partnerships.NewService(repo)
-	handler := soap.NewHandler(svc, string(wsdlContent))
+	handler := soap.NewHandlerWithConfig(svc, string(wsdlContent), soap.HandlerConfig{
+		JWTSecret:       cfg.JWTSecret,
+		MaxRequestBytes: cfg.MaxRequestBytes,
+		RequestTimeout:  cfg.RequestTimeout,
+	})
 
 	// Register route
 	mux := http.NewServeMux()
@@ -43,7 +48,19 @@ func main() {
 	log.Printf("WSDL available at:  http://localhost%s/partnership?wsdl", addr)
 	log.Printf("SOAP endpoint:      http://localhost%s/partnership", addr)
 
-	if err := http.ListenAndServe(addr, mux); err != nil {
+	server := newHTTPServer(addr, mux, cfg)
+	if err := server.ListenAndServe(); err != nil {
 		log.Fatalf("Server error: %v", err)
+	}
+}
+
+func newHTTPServer(addr string, handler http.Handler, cfg *config.Config) *http.Server {
+	return &http.Server{
+		Addr:              addr,
+		Handler:           handler,
+		ReadHeaderTimeout: cfg.ReadHeaderTimeout,
+		ReadTimeout:       cfg.ReadTimeout,
+		WriteTimeout:      cfg.WriteTimeout,
+		IdleTimeout:       cfg.IdleTimeout,
 	}
 }

@@ -16,8 +16,9 @@ var (
 
 // Service contains all business logic for the 9 SOAP partnership operations.
 //
-// Authorization model (simplified for prototype):
-//   - userID + userRole are passed as SOAP parameters (not JWT).
+// Authorization model:
+//   - The SOAP transport verifies JWT authentication and replaces the legacy
+//     XML userID + userRole fields with the authenticated actor before entry.
 //   - userRole ("UMKM" or "MITRA") must be one of the two valid roles.
 //   - Actor-level authorization (who can approve/reject/cancel/sign) is enforced
 //     by matching userID against the DB's pengaju_akun_id or penerima_akun_id.

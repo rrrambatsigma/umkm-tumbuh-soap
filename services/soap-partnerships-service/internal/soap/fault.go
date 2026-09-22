@@ -9,8 +9,8 @@ import (
 type FaultCode string
 
 const (
-	FaultClient FaultCode = "Client"
-	FaultServer FaultCode = "Server"
+	FaultClient FaultCode = "soap:Client"
+	FaultServer FaultCode = "soap:Server"
 )
 
 // Fault is a SOAP 1.1 Fault element.
@@ -55,6 +55,21 @@ func WriteFault(w http.ResponseWriter, httpStatus int, code FaultCode, message s
 // WriteClientFault writes a SOAP Client fault (400 Bad Request).
 func WriteClientFault(w http.ResponseWriter, message string) {
 	WriteFault(w, http.StatusBadRequest, FaultClient, message)
+}
+
+// WriteUnauthorizedFault writes an authentication SOAP fault (401).
+func WriteUnauthorizedFault(w http.ResponseWriter, message string) {
+	WriteFault(w, http.StatusUnauthorized, FaultClient, message)
+}
+
+// WriteForbiddenFault writes an authorization SOAP fault (403).
+func WriteForbiddenFault(w http.ResponseWriter, message string) {
+	WriteFault(w, http.StatusForbidden, FaultClient, message)
+}
+
+// WritePayloadTooLargeFault writes an oversized-request SOAP fault (413).
+func WritePayloadTooLargeFault(w http.ResponseWriter, message string) {
+	WriteFault(w, http.StatusRequestEntityTooLarge, FaultClient, message)
 }
 
 // WriteServerFault writes a SOAP Server fault (500 Internal Server Error).
