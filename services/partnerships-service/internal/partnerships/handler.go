@@ -331,17 +331,13 @@ func (h *Handler) MarkAsRead(w http.ResponseWriter, r *http.Request) {
 		response.Error(w, http.StatusBadRequest, "Invalid partnership ID", nil)
 		return
 	}
-	partnership, err := h.service.GetPartnershipByID(r.Context(), id)
+	err := h.service.MarkPartnershipAsRead(r.Context(), id)
 	if err != nil {
 		if appErr, ok := err.(*apperror.AppError); ok {
 			response.Error(w, appErr.Code, appErr.Message)
 		} else {
 			response.Error(w, http.StatusInternalServerError, "Gagal mengambil pengajuan kemitraan")
 		}
-		return
-	}
-	if partnership.ReceiverID != extractUserIDFromRequest(r) {
-		response.Error(w, http.StatusForbidden, "Hanya penerima yang dapat menandai pengajuan dibaca")
 		return
 	}
 	response.Success(w, http.StatusOK, nil, "Status dibaca berhasil diperbarui.")

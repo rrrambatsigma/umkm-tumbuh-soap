@@ -2,6 +2,7 @@ package partnerships
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -18,6 +19,7 @@ var (
 )
 
 type Service interface {
+	MarkPartnershipAsRead(ctx context.Context, id string) error
 	GetPartnershipSummary(
 		ctx context.Context,
 		userID string,
@@ -111,11 +113,12 @@ func (s *service) GetIncomingPartnershipSummary(
 	ctx context.Context,
 	userID string,
 ) (map[string]int, error) {
-	if strings.TrimSpace(userID) == "" {
-		return nil, apperror.New(401, "user not authenticated")
+	actorID, err := partnershipScope(ctx, userID)
+	if err != nil {
+		return nil, err
 	}
 
-	return s.repo.GetIncomingSummary(ctx, userID)
+	return s.repo.GetIncomingSummary(ctx, actorID)
 }
 
 func (s *service) ValidatePartnershipRequest(
@@ -161,6 +164,9 @@ func (s *service) CreatePartnership(
 	if actorID != userID || actorRole != userRole {
 		return nil, apperror.New(http.StatusForbidden, "Identitas pengaju tidak sesuai sesi")
 	}
+	if validation := s.ValidatePartnershipRequest(req); len(validation) > 0 {
+		return nil, apperror.New(http.StatusUnprocessableEntity, "Validation failed")
+	}
 	for _, documentID := range req.AttachmentFiles {
 		owned, err := s.repo.OwnsDocument(ctx, actorID, documentID, false)
 		if err != nil {
@@ -184,12 +190,18 @@ func (s *service) CreatePartnership(
 	// Convert business ID (mitra_id/umkm_id) to akun_id
 	receiverAkunID, err := s.repo.FindAkunIDByBusinessID(ctx, req.ReceiverID, receiverRole)
 	if err != nil {
-		return nil, apperror.New(400, "Penerima tidak ditemukan: "+err.Error())
+		if errors.Is(err, ErrBusinessNotFound) {
+			return nil, apperror.New(400, "Penerima tidak ditemukan")
+		}
+		return nil, apperror.New(500, "Gagal mencari penerima")
 	}
 
 	// Look up requester's business ID and receiver's business ID for FK constraints
 	// These may be empty for API-registered accounts without business profiles
-	requesterBusinessID, _ := s.repo.FindBusinessIDByAkunID(ctx, userID, userRole)
+	requesterBusinessID, err := s.repo.FindBusinessIDByAkunID(ctx, actorID, actorRole)
+	if err != nil && !errors.Is(err, ErrBusinessNotFound) {
+		return nil, apperror.New(500, "Gagal mencari profil pengaju")
+	}
 	receiverBusinessID := req.ReceiverID
 
 	now := time.Now()
@@ -222,7 +234,7 @@ func (s *service) CreatePartnership(
 	if err := s.repo.Create(ctx, partnership); err != nil {
 		return nil, apperror.New(
 			500,
-			"failed to create partnership request: "+err.Error(),
+			"failed to create partnership request",
 		)
 	}
 
@@ -230,12 +242,16 @@ func (s *service) CreatePartnership(
 		if err := s.repo.CreateAttachments(ctx, partnership.ID, req.AttachmentFiles); err != nil {
 			return nil, apperror.New(
 				500,
-				"failed to save partnership attachments: "+err.Error(),
+				"failed to save partnership attachments",
 			)
 		}
 	}
 
-	return s.repo.FindByID(ctx, partnership.ID)
+	created, err := s.repo.FindByID(ctx, partnership.ID)
+	if err != nil {
+		return nil, apperror.New(500, "Gagal mengambil pengajuan kemitraan")
+	}
+	return created, nil
 }
 
 func generatePGJID(ctx context.Context, repo Repository) string {
@@ -280,6 +296,10 @@ func (s *service) GetPartnershipsByRequester(
 	page,
 	limit int,
 ) ([]PartnershipListResponse, int, error) {
+	actorID, err := partnershipScope(ctx, requesterID)
+	if err != nil {
+		return nil, 0, err
+	}
 
 	if page < 1 {
 		page = 1
@@ -293,7 +313,7 @@ func (s *service) GetPartnershipsByRequester(
 
 	return s.repo.FindByRequesterID(
 		ctx,
-		requesterID,
+		actorID,
 		status,
 		limit,
 		offset,
@@ -307,6 +327,10 @@ func (s *service) GetPartnershipsByReceiver(
 	page,
 	limit int,
 ) ([]PartnershipListResponse, int, error) {
+	actorID, err := partnershipScope(ctx, receiverID)
+	if err != nil {
+		return nil, 0, err
+	}
 
 	if page < 1 {
 		page = 1
@@ -320,7 +344,7 @@ func (s *service) GetPartnershipsByReceiver(
 
 	return s.repo.FindByReceiverID(
 		ctx,
-		receiverID,
+		actorID,
 		status,
 		limit,
 		offset,
@@ -382,11 +406,32 @@ func (s *service) SignPartnership(
 }
 
 func (s *service) GetPartnershipSummary(ctx context.Context, userID string) (map[string]int, error) {
-	summary, err := s.repo.GetSummary(ctx, userID)
+	actorID, err := partnershipScope(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	summary, err := s.repo.GetSummary(ctx, actorID)
 	if err != nil {
 		return nil, apperror.New(500, "failed to get partnership summary: "+err.Error())
 	}
 	return summary, nil
+}
+
+// MarkPartnershipAsRead preserves the REST authorization-only behavior.
+// There is deliberately no read-state or partnership-status mutation.
+func (s *service) MarkPartnershipAsRead(ctx context.Context, id string) error {
+	partnership, err := s.GetPartnershipByID(ctx, id)
+	if err != nil {
+		return err
+	}
+	actorID, _, err := partnershipActor(ctx)
+	if err != nil {
+		return err
+	}
+	if partnership.ReceiverID != actorID {
+		return apperror.New(http.StatusForbidden, "Hanya penerima yang dapat menandai pengajuan dibaca")
+	}
+	return nil
 }
 
 // ============================================================

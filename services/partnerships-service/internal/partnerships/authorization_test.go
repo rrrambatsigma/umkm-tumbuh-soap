@@ -143,7 +143,7 @@ func TestContractSubmission(t *testing.T) {
 func TestCreateRejectsForeignAttachmentsBeforeWriting(t *testing.T) {
 	repo := &permissionRepository{ownedDocument: false}
 	_, err := NewService(repo).CreatePartnership(actorContext("requester", "UMKM"), "requester", RoleUMKM,
-		CreatePartnershipRequest{ReceiverID: "business", AttachmentFiles: []string{"foreign-document"}})
+		CreatePartnershipRequest{ReceiverID: "business", ProposalTitle: "Valid proposal title", ProposalDescription: "A sufficiently long proposal description.", AttachmentFiles: []string{"foreign-document"}})
 	requireStatus(t, err, http.StatusForbidden)
 }
 

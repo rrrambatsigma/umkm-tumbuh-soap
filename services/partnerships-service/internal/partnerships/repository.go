@@ -2,6 +2,7 @@ package partnerships
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -10,6 +11,9 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/savitar393/umkm-tumbuh/services/partnerships-service/internal/apperror"
 )
+
+// ErrBusinessNotFound distinguishes an absent business from a database failure.
+var ErrBusinessNotFound = errors.New("business not found")
 
 type Repository interface {
 	OwnsDocument(ctx context.Context, actorID, documentID string, legacy bool) (bool, error)
@@ -569,7 +573,7 @@ func (r *repository) FindAkunIDByBusinessID(ctx context.Context, businessID stri
 	err := r.db.QueryRow(ctx, query, businessID).Scan(&akunID)
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			return "", fmt.Errorf("business ID not found: %s", businessID)
+			return "", ErrBusinessNotFound
 		}
 		return "", fmt.Errorf("failed to find akun_id for business ID %s: %w", businessID, err)
 	}
@@ -593,7 +597,7 @@ func (r *repository) FindBusinessIDByAkunID(ctx context.Context, akunID string, 
 	err := r.db.QueryRow(ctx, query, akunID).Scan(&businessID)
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			return "", fmt.Errorf("business ID not found for akun_id: %s", akunID)
+			return "", ErrBusinessNotFound
 		}
 		return "", fmt.Errorf("failed to find business ID for akun_id %s: %w", akunID, err)
 	}
