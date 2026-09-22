@@ -1,4 +1,4 @@
-package partnerships
+package partnerships_test
 
 import (
 	"context"
@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/savitar393/umkm-tumbuh/services/partnerships-service/internal/apperror"
+	. "github.com/savitar393/umkm-tumbuh/services/partnerships-service/internal/partnerships"
 )
 
 type boundaryRepository struct {

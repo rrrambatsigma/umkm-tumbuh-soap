@@ -6,11 +6,11 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
 	"github.com/savitar393/umkm-tumbuh/services/partnerships-service/internal/middleware"
-	"github.com/savitar393/umkm-tumbuh/services/partnerships-service/internal/partnerships"
+	"github.com/savitar393/umkm-tumbuh/services/partnerships-service/internal/rest"
 )
 
 func NewRouter(
-	partnershipHandler *partnerships.Handler,
+	partnershipHandler *rest.Handler,
 	frontendURL string,
 	jwtSecret string,
 ) *chi.Mux {

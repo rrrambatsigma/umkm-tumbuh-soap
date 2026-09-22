@@ -1,4 +1,4 @@
-package partnerships
+package partnerships_test
 
 import (
 	"context"
@@ -13,6 +13,8 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/savitar393/umkm-tumbuh/services/partnerships-service/internal/apperror"
 	"github.com/savitar393/umkm-tumbuh/services/partnerships-service/internal/middleware"
+	. "github.com/savitar393/umkm-tumbuh/services/partnerships-service/internal/partnerships"
+	"github.com/savitar393/umkm-tumbuh/services/partnerships-service/internal/rest"
 )
 
 type readService struct {
@@ -33,7 +35,7 @@ func serveBoundaryHTTP(t *testing.T, svc Service, method, path, body, actor stri
 	r := chi.NewRouter()
 	r.Use(middleware.AuthMiddleware("boundary-secret"))
 	r.Use(middleware.RequireRoles("UMKM", "MITRA"))
-	h := NewHandler(svc)
+	h := rest.NewHandler(svc)
 	r.Post("/partnerships", h.CreatePartnership)
 	r.Patch("/partnerships/{id}/read", h.MarkAsRead)
 	r.Get("/partnerships/status", h.GetPartnershipStatus)
