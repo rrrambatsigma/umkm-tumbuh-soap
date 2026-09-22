@@ -5,19 +5,19 @@ import (
 	"net/http"
 
 	"github.com/savitar393/umkm-tumbuh/services/partnerships-service/internal/apperror"
-	"github.com/savitar393/umkm-tumbuh/services/partnerships-service/internal/middleware"
+	"github.com/savitar393/umkm-tumbuh/services/partnerships-service/internal/auth"
 )
 
 func partnershipActor(ctx context.Context) (string, UserRole, error) {
-	id, ok := middleware.GetUserID(ctx)
+	actor, ok := auth.ActorFromContext(ctx)
 	if !ok {
 		return "", "", apperror.New(http.StatusUnauthorized, "User belum terautentikasi")
 	}
-	role, _ := middleware.GetUserRole(ctx)
+	role := actor.Role
 	if role != string(RoleUMKM) && role != string(RoleMitra) {
 		return "", "", apperror.New(http.StatusForbidden, "Kemitraan hanya untuk UMKM dan Mitra")
 	}
-	return id, UserRole(role), nil
+	return actor.UserID, UserRole(role), nil
 }
 
 func authorizeStatusChange(p *PartnershipResponse, actorID string, next PartnershipStatus) error {

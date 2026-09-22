@@ -3,52 +3,30 @@ package middleware
 import (
 	"context"
 	"net/http"
-	"strings"
 
-	"github.com/golang-jwt/jwt/v5"
+	"github.com/savitar393/umkm-tumbuh/services/partnerships-service/internal/auth"
 	"github.com/savitar393/umkm-tumbuh/services/partnerships-service/internal/response"
 )
-
-type contextKey string
-
-const UserIDKey contextKey = "user_id"
-const UserRoleKey contextKey = "user_role"
-
-type accessClaims struct {
-	Role string `json:"role"`
-	jwt.RegisteredClaims
-}
 
 func AuthMiddleware(jwtSecret string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if strings.TrimSpace(jwtSecret) == "" {
-				response.Error(w, http.StatusInternalServerError, "JWT secret belum dikonfigurasi")
-				return
-			}
-			parts := strings.Fields(r.Header.Get("Authorization"))
-			if len(parts) != 2 || !strings.EqualFold(parts[0], "Bearer") {
-				response.Error(w, http.StatusUnauthorized, "Authorization header tidak valid")
-				return
-			}
-
-			claims := &accessClaims{}
-			token, err := jwt.ParseWithClaims(parts[1], claims, func(_ *jwt.Token) (any, error) {
-				return []byte(jwtSecret), nil
-			}, jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}), jwt.WithExpirationRequired())
-			if err != nil || token == nil || !token.Valid || strings.TrimSpace(claims.Subject) == "" {
-				response.Error(w, http.StatusUnauthorized, "Token tidak valid atau sudah kedaluwarsa")
-				return
-			}
-			switch claims.Role {
-			case "ADMIN", "UMKM", "MITRA":
-			default:
-				response.Error(w, http.StatusUnauthorized, "Peran pada token tidak valid")
+			actor, err := auth.VerifyBearer(r.Header.Get("Authorization"), jwtSecret)
+			if err != nil {
+				switch err {
+				case auth.ErrUnconfigured:
+					response.Error(w, http.StatusInternalServerError, "JWT secret belum dikonfigurasi")
+				case auth.ErrAuthorization:
+					response.Error(w, http.StatusUnauthorized, "Authorization header tidak valid")
+				case auth.ErrRole:
+					response.Error(w, http.StatusUnauthorized, "Peran pada token tidak valid")
+				default:
+					response.Error(w, http.StatusUnauthorized, "Token tidak valid atau sudah kedaluwarsa")
+				}
 				return
 			}
 
-			ctx := context.WithValue(r.Context(), UserIDKey, claims.Subject)
-			ctx = context.WithValue(ctx, UserRoleKey, claims.Role)
+			ctx := auth.WithActor(r.Context(), actor)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
@@ -74,11 +52,11 @@ func RequireRoles(roles ...string) func(http.Handler) http.Handler {
 }
 
 func GetUserID(ctx context.Context) (string, bool) {
-	id, ok := ctx.Value(UserIDKey).(string)
-	return id, ok && strings.TrimSpace(id) != ""
+	actor, ok := auth.ActorFromContext(ctx)
+	return actor.UserID, ok
 }
 
 func GetUserRole(ctx context.Context) (string, bool) {
-	role, ok := ctx.Value(UserRoleKey).(string)
-	return role, ok && role != ""
+	actor, ok := auth.ActorFromContext(ctx)
+	return actor.Role, ok && actor.Role != ""
 }

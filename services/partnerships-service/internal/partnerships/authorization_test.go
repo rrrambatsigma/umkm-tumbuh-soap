@@ -4,10 +4,13 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/savitar393/umkm-tumbuh/services/partnerships-service/internal/apperror"
+	"github.com/savitar393/umkm-tumbuh/services/partnerships-service/internal/auth"
 	"github.com/savitar393/umkm-tumbuh/services/partnerships-service/internal/middleware"
 )
 
@@ -43,8 +46,7 @@ func (r *permissionRepository) UpdateContract(_ context.Context, _ string, _ str
 }
 
 func actorContext(id, role string) context.Context {
-	ctx := context.WithValue(context.Background(), middleware.UserIDKey, id)
-	return context.WithValue(ctx, middleware.UserRoleKey, role)
+	return auth.WithActor(context.Background(), auth.Actor{UserID: id, Role: role})
 }
 
 func requireStatus(t *testing.T, err error, want int) {
@@ -68,6 +70,7 @@ func TestPartnershipParticipants(t *testing.T) {
 	}{
 		{"requester", "UMKM", 0}, {"receiver", "MITRA", 0},
 		{"stranger", "UMKM", 403}, {"admin", "ADMIN", 403}, {"", "UMKM", 401},
+		{"requester", "OWNER", 403}, {"requester", "", 403}, {" ", "UMKM", 401},
 	} {
 		t.Run(tc.id+tc.role, func(t *testing.T) {
 			repo := &permissionRepository{partnership: PartnershipResponse{PartnershipRequest: PartnershipRequest{
@@ -142,4 +145,75 @@ func TestCreateRejectsForeignAttachmentsBeforeWriting(t *testing.T) {
 	_, err := NewService(repo).CreatePartnership(actorContext("requester", "UMKM"), "requester", RoleUMKM,
 		CreatePartnershipRequest{ReceiverID: "business", AttachmentFiles: []string{"foreign-document"}})
 	requireStatus(t, err, http.StatusForbidden)
+}
+
+func TestCreateCannotAuthenticateUsingCallerParameters(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		ctx  context.Context
+		id   string
+		role UserRole
+		want int
+	}{
+		{"missing actor", context.Background(), "requester", RoleUMKM, 401},
+		{"string context key", context.WithValue(context.Background(), "user_id", "requester"), "requester", RoleUMKM, 401},
+		{"different id", actorContext("requester", "UMKM"), "victim", RoleUMKM, 403},
+		{"different role", actorContext("requester", "UMKM"), "requester", RoleMitra, 403},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			// A repository call would panic: rejection must precede database access.
+			_, err := NewService(nil).CreatePartnership(tc.ctx, tc.id, tc.role, CreatePartnershipRequest{})
+			requireStatus(t, err, tc.want)
+		})
+	}
+}
+
+func TestHTTPVerifiedActorReachesBusinessAuthorization(t *testing.T) {
+	const secret = "boundary-test-secret"
+	for _, tc := range []struct {
+		name, subject, spoof string
+		want                 int
+	}{
+		{"participant with spoofed header", "requester", "stranger", 204},
+		{"stranger impersonating participant", "stranger", "requester", 403},
+		{"anonymous impersonating participant", "", "requester", 401},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			repo := &permissionRepository{partnership: PartnershipResponse{PartnershipRequest: PartnershipRequest{
+				ID: "P1", RequesterID: "requester", ReceiverID: "receiver", Status: StatusSubmitted,
+			}}}
+			svc := NewService(repo)
+			called := false
+			handler := middleware.AuthMiddleware(secret)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				called = true
+				_, err := svc.GetPartnershipByID(r.Context(), "P1")
+				if err != nil {
+					var appErr *apperror.AppError
+					if !errors.As(err, &appErr) {
+						t.Fatal(err)
+					}
+					w.WriteHeader(appErr.Code)
+					return
+				}
+				w.WriteHeader(http.StatusNoContent)
+			}))
+			req := httptest.NewRequest("GET", "/", nil)
+			req.Header.Set("X-User-ID", tc.spoof)
+			req.Header.Set("X-User-Role", "ADMIN")
+			if tc.subject != "" {
+				token, err := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+					"sub": tc.subject, "role": "UMKM", "exp": time.Now().Add(time.Hour).Unix(),
+				}).SignedString([]byte(secret))
+				if err != nil {
+					t.Fatal(err)
+				}
+				req.Header.Set("Authorization", "Bearer "+token)
+			}
+			rr := httptest.NewRecorder()
+			handler.ServeHTTP(rr, req)
+			if rr.Code != tc.want || called != (tc.subject != "") {
+				t.Fatalf("status=%d called=%v; want status %d", rr.Code, called, tc.want)
+			}
+		})
+	}
 }
