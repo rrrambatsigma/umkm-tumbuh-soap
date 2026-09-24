@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -22,13 +23,28 @@ func newError(code int, msg string) error {
 	return &AppError{Code: code, Message: msg}
 }
 
-// Repository handles all SQL operations for the SOAP partnerships service.
-type Repository struct {
-	db *pgxpool.Pool
+// dbQuerier adalah interface yang merangkum method database yang digunakan oleh Repository.
+// Dengan interface ini, Repository bisa diuji menggunakan mock tanpa koneksi database nyata.
+// *pgxpool.Pool mengimplementasikan interface ini secara alami.
+type dbQuerier interface {
+	Exec(ctx context.Context, sql string, arguments ...any) (pgconn.CommandTag, error)
+	Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error)
+	QueryRow(ctx context.Context, sql string, args ...any) pgx.Row
 }
 
-// NewRepository creates a new Repository.
+// Repository handles all SQL operations for the SOAP partnerships service.
+type Repository struct {
+	db dbQuerier
+}
+
+// NewRepository creates a new Repository backed by a real pgxpool.Pool.
 func NewRepository(db *pgxpool.Pool) *Repository {
+	return &Repository{db: db}
+}
+
+// newRepositoryWithQuerier creates a Repository backed by any dbQuerier.
+// Digunakan hanya untuk keperluan testing.
+func newRepositoryWithQuerier(db dbQuerier) *Repository {
 	return &Repository{db: db}
 }
 
