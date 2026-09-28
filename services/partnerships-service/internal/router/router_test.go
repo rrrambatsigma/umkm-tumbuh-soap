@@ -7,11 +7,11 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/savitar393/umkm-tumbuh/services/partnerships-service/internal/partnerships"
+	"github.com/savitar393/umkm-tumbuh/services/partnerships-service/internal/rest"
 )
 
 func TestEveryPartnershipRouteRequiresAuthentication(t *testing.T) {
-	router := NewRouter(partnerships.NewHandler(nil), "http://localhost:5173", "test-secret")
+	router := NewRouter(rest.NewHandler(nil), "http://localhost:5173", "test-secret")
 	for _, tc := range []struct{ method, path string }{
 		{"POST", "/partnerships"}, {"GET", "/partnerships/status"}, {"GET", "/partnerships/summary"},
 		{"GET", "/partnerships/incoming"}, {"GET", "/partnerships/incoming/summary"}, {"GET", "/partnerships/P1"},
@@ -38,7 +38,7 @@ func TestEveryPartnershipRouteRequiresAuthentication(t *testing.T) {
 
 func TestDirectoryRoleComesFromToken(t *testing.T) {
 	const secret = "test-secret"
-	router := NewRouter(partnerships.NewHandler(nil), "http://localhost:5173", secret)
+	router := NewRouter(rest.NewHandler(nil), "http://localhost:5173", secret)
 	for _, tc := range []struct{ role, spoof, path string }{
 		{"UMKM", "MITRA", "/umkm"}, {"UMKM", "MITRA", "/umkm/U1"},
 		{"MITRA", "UMKM", "/mitra"}, {"MITRA", "UMKM", "/mitra/M1"},

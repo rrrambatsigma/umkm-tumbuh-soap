@@ -66,6 +66,9 @@ services:
   partnerships-service:
     environment: *test-environment
     ports: !reset []
+  soap-partnerships-service:
+    environment: *test-environment
+    ports: !reset []
   document-service:
     environment:
       <<: *test-environment

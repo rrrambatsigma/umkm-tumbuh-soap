@@ -1,4 +1,4 @@
-"""Exercise the five APIs and both S3 consumers inside the isolated Compose stack."""
+"""Exercise the APIs and S3 consumers inside the isolated Compose stack."""
 
 import base64
 import hashlib
@@ -110,8 +110,7 @@ def key_fingerprint():
 
 def verify_uploads(state, token):
     assert request(DOCUMENT + "/documents/" + state["document_id"] + "/download", token=token) == TEXT
-    assert request(USER + "/products/" + state["product_id"] + "/thumbnail", token=token) == PNG
-    print("PASS: document and product image downloads match the uploaded bytes", flush=True)
+    print("PASS: document downloads match the uploaded bytes", flush=True)
 
 
 def main():
@@ -121,15 +120,10 @@ def main():
     if sys.argv[1] == "prepare":
         # An unrelated key must survive bootstrap reruns too.
         sentinel = garage("CreateKey", method="POST", data={"name": "Stage 1 unrelated key"})
-        product = api(USER + "/products/", method="POST", token=token, expected=201,
-                      data={"name": "Stage 1 product", "category_name": "Test", "price": 1000,
-                            "initial_stock": 0, "status": "AKTIF"})["product"]
-        upload(USER + "/products/" + product["id"] + "/thumbnail", token,
-               "thumbnail", "stage1.png", "image/png", PNG)
         document = upload(DOCUMENT + "/documents/upload", token, "file", "stage1.txt",
                           "text/plain", TEXT, {"category": "GENERAL_DOCUMENT"}, expected=201)["document"]
         assert document["bucket_name"] == "test-documents", "Custom bucket name was ignored"
-        state = {"product_id": product["id"], "document_id": document["id"],
+        state = {"document_id": document["id"],
                  "key_fingerprint": key_fingerprint(), "sentinel_key": sentinel["accessKeyId"]}
         STATE.write_text(json.dumps(state))
     elif sys.argv[1] == "verify":

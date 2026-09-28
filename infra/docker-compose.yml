@@ -254,6 +254,29 @@ services:
     networks:
       - umkm_network
 
+  soap-partnerships-service:
+    build:
+      context: ../services/soap-partnerships-service
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-umkm_user}:${POSTGRES_PASSWORD:-umkm_password}@postgres:5432/${POSTGRES_DB:-umkm_tumbuh}?sslmode=disable
+      JWT_SECRET: ${JWT_SECRET}
+      SOAP_PORT: ${SOAP_SERVICE_PORT:-9090}
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null 'http://127.0.0.1:9090/partnership?wsdl' || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 15s
+    ports:
+      - "${HOST_BIND_ADDRESS:-127.0.0.1}:${SOAP_SERVICE_PORT:-9090}:9090"
+    depends_on:
+      db-migrate:
+        condition: service_completed_successfully
+    networks:
+      - umkm_network
+
 volumes:
   postgres_data:
   uploads_data:

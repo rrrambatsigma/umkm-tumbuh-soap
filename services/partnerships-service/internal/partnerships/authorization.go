@@ -5,19 +5,32 @@ import (
 	"net/http"
 
 	"github.com/savitar393/umkm-tumbuh/services/partnerships-service/internal/apperror"
-	"github.com/savitar393/umkm-tumbuh/services/partnerships-service/internal/middleware"
+	"github.com/savitar393/umkm-tumbuh/services/partnerships-service/internal/auth"
 )
 
 func partnershipActor(ctx context.Context) (string, UserRole, error) {
-	id, ok := middleware.GetUserID(ctx)
+	actor, ok := auth.ActorFromContext(ctx)
 	if !ok {
 		return "", "", apperror.New(http.StatusUnauthorized, "User belum terautentikasi")
 	}
-	role, _ := middleware.GetUserRole(ctx)
+	role := actor.Role
 	if role != string(RoleUMKM) && role != string(RoleMitra) {
 		return "", "", apperror.New(http.StatusForbidden, "Kemitraan hanya untuk UMKM dan Mitra")
 	}
-	return id, UserRole(role), nil
+	return actor.UserID, UserRole(role), nil
+}
+
+// partnershipScope verifies the compatibility argument but returns only the
+// authenticated account ID as the repository query scope.
+func partnershipScope(ctx context.Context, requestedID string) (string, error) {
+	actorID, _, err := partnershipActor(ctx)
+	if err != nil {
+		return "", err
+	}
+	if requestedID != actorID {
+		return "", apperror.New(http.StatusForbidden, "Identitas akun tidak sesuai sesi")
+	}
+	return actorID, nil
 }
 
 func authorizeStatusChange(p *PartnershipResponse, actorID string, next PartnershipStatus) error {

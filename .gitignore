@@ -113,3 +113,8 @@ infra/db/dummy/*.csv
 # Generated API test results
 tests/postman/reports/
 tests/stack/reports/
+
+# SOAP test deliverables (Anggota 5): laporan runtime tidak ikut direpo,
+# tetapi dokumen test wajib bisa di-commit meski *.md diblokir di atas.
+tests/soap/reports/
+!tests/soap/*.md

@@ -9,6 +9,7 @@ import (
 	"github.com/savitar393/umkm-tumbuh/services/partnerships-service/internal/config"
 	"github.com/savitar393/umkm-tumbuh/services/partnerships-service/internal/database"
 	"github.com/savitar393/umkm-tumbuh/services/partnerships-service/internal/partnerships"
+	"github.com/savitar393/umkm-tumbuh/services/partnerships-service/internal/rest"
 	"github.com/savitar393/umkm-tumbuh/services/partnerships-service/internal/router"
 )
 
@@ -25,7 +26,7 @@ func main() {
 
 	partnershipRepo := partnerships.NewRepository(db)
 	partnershipService := partnerships.NewService(partnershipRepo)
-	partnershipHandler := partnerships.NewHandler(partnershipService)
+	partnershipHandler := rest.NewHandler(partnershipService)
 
 	appRouter := router.NewRouter(
 		partnershipHandler,

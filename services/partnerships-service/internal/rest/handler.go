@@ -1,4 +1,4 @@
-package partnerships
+package rest
 
 import (
 	"encoding/json"
@@ -9,14 +9,15 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/savitar393/umkm-tumbuh/services/partnerships-service/internal/apperror"
 	"github.com/savitar393/umkm-tumbuh/services/partnerships-service/internal/middleware"
+	"github.com/savitar393/umkm-tumbuh/services/partnerships-service/internal/partnerships"
 	"github.com/savitar393/umkm-tumbuh/services/partnerships-service/internal/response"
 )
 
 type Handler struct {
-	service Service
+	service partnerships.Service
 }
 
-func NewHandler(service Service) *Handler {
+func NewHandler(service partnerships.Service) *Handler {
 	return &Handler{service: service}
 }
 
@@ -26,12 +27,12 @@ func extractUserIDFromRequest(r *http.Request) string {
 	return id
 }
 
-func extractUserRoleFromRequest(r *http.Request) UserRole {
+func extractUserRoleFromRequest(r *http.Request) partnerships.UserRole {
 	role, _ := middleware.GetUserRole(r.Context())
-	return UserRole(role)
+	return partnerships.UserRole(role)
 }
 
-func formatPartnershipListTitle(p PartnershipListResponse) string {
+func formatPartnershipListTitle(p partnerships.PartnershipListResponse) string {
 	name := strings.TrimSpace(p.RequesterBusinessName)
 	if name == "" {
 		name = strings.TrimSpace(p.RequesterName)
@@ -47,7 +48,7 @@ func (h *Handler) CreatePartnership(w http.ResponseWriter, r *http.Request) {
 	userID := extractUserIDFromRequest(r)
 	userRole := extractUserRoleFromRequest(r)
 
-	var req CreatePartnershipRequest
+	var req partnerships.CreatePartnershipRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		response.Error(w, http.StatusBadRequest, "Invalid request body", nil)
 		return
@@ -95,9 +96,9 @@ func (h *Handler) GetPartnershipStatus(w http.ResponseWriter, r *http.Request) {
 	}
 	statusStr := r.URL.Query().Get("status")
 
-	var status *PartnershipStatus
+	var status *partnerships.PartnershipStatus
 	if statusStr != "" {
-		s := PartnershipStatus(strings.ToUpper(statusStr))
+		s := partnerships.PartnershipStatus(strings.ToUpper(statusStr))
 		status = &s
 	}
 
@@ -218,9 +219,9 @@ func (h *Handler) GetIncomingPartnerships(w http.ResponseWriter, r *http.Request
 	}
 	statusStr := r.URL.Query().Get("status")
 
-	var status *PartnershipStatus
+	var status *partnerships.PartnershipStatus
 	if statusStr != "" {
-		s := PartnershipStatus(strings.ToUpper(statusStr))
+		s := partnerships.PartnershipStatus(strings.ToUpper(statusStr))
 		status = &s
 	}
 
@@ -297,7 +298,7 @@ func (h *Handler) SignPartnership(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var req SignPartnershipRequest
+	var req partnerships.SignPartnershipRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		response.Error(w, http.StatusBadRequest, "Invalid request body", nil)
 		return
@@ -331,17 +332,13 @@ func (h *Handler) MarkAsRead(w http.ResponseWriter, r *http.Request) {
 		response.Error(w, http.StatusBadRequest, "Invalid partnership ID", nil)
 		return
 	}
-	partnership, err := h.service.GetPartnershipByID(r.Context(), id)
+	err := h.service.MarkPartnershipAsRead(r.Context(), id)
 	if err != nil {
 		if appErr, ok := err.(*apperror.AppError); ok {
 			response.Error(w, appErr.Code, appErr.Message)
 		} else {
 			response.Error(w, http.StatusInternalServerError, "Gagal mengambil pengajuan kemitraan")
 		}
-		return
-	}
-	if partnership.ReceiverID != extractUserIDFromRequest(r) {
-		response.Error(w, http.StatusForbidden, "Hanya penerima yang dapat menandai pengajuan dibaca")
 		return
 	}
 	response.Success(w, http.StatusOK, nil, "Status dibaca berhasil diperbarui.")
@@ -355,7 +352,7 @@ func (h *Handler) ApprovePartnership(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var req UpdatePartnershipStatus
+	var req partnerships.UpdatePartnershipStatus
 	if r.Body != nil {
 		_ = json.NewDecoder(r.Body).Decode(&req)
 	}
@@ -392,7 +389,7 @@ func (h *Handler) RejectPartnership(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var req UpdatePartnershipStatus
+	var req partnerships.UpdatePartnershipStatus
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		response.Error(w, http.StatusBadRequest, "Invalid request body", nil)
 		return
@@ -403,7 +400,7 @@ func (h *Handler) RejectPartnership(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	req.Status = StatusRejected
+	req.Status = partnerships.StatusRejected
 
 	if err := h.service.UpdatePartnershipStatus(r.Context(), id, req); err != nil {
 		if appErr, ok := err.(*apperror.AppError); ok {
@@ -434,13 +431,13 @@ func (h *Handler) CancelPartnership(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var req UpdatePartnershipStatus
+	var req partnerships.UpdatePartnershipStatus
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		response.Error(w, http.StatusBadRequest, "Invalid request body", nil)
 		return
 	}
 
-	req.Status = StatusCancelled
+	req.Status = partnerships.StatusCancelled
 
 	if err := h.service.UpdatePartnershipStatus(r.Context(), id, req); err != nil {
 		if appErr, ok := err.(*apperror.AppError); ok {
@@ -489,7 +486,7 @@ func (h *Handler) GetUMKMList(w http.ResponseWriter, r *http.Request) {
 
 	// Extract user role - hanya MITRA yang bisa melihat UMKM
 	userRole := extractUserRoleFromRequest(r)
-	if userRole != RoleMitra {
+	if userRole != partnerships.RoleMitra {
 		response.Error(w, http.StatusForbidden, "Hanya mitra yang dapat melihat daftar UMKM", nil)
 		return
 	}
@@ -545,7 +542,7 @@ func (h *Handler) GetMitraList(w http.ResponseWriter, r *http.Request) {
 
 	// Extract user role - hanya UMKM yang bisa melihat mitra
 	userRole := extractUserRoleFromRequest(r)
-	if userRole != RoleUMKM {
+	if userRole != partnerships.RoleUMKM {
 		response.Error(w, http.StatusForbidden, "Hanya UMKM yang dapat melihat daftar mitra", nil)
 		return
 	}

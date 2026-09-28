@@ -2,7 +2,7 @@
 
 **English** | [Bahasa Indonesia](README.id.md)
 
-A platform for managing micro, small, and medium enterprises (UMKM), partner collaboration, documents, and business dashboards. The frontend uses React and TypeScript; four Go services share a PostgreSQL database. Garage provides S3-compatible storage, and Mailpit receives development email.
+A platform for managing micro, small, and medium enterprises (UMKM), partner collaboration, documents, and business dashboards. The frontend uses React and TypeScript; five Go services share a PostgreSQL database. Garage provides S3-compatible storage, and Mailpit receives development email.
 
 ## Run locally
 
@@ -39,6 +39,7 @@ See the [local development guide](docs/README_LOCAL_DEV.md) for environment vari
 | User service | http://localhost:8081/api/v1 | Profiles and dashboards |
 | Partnerships service | http://localhost:8082/api/v1 | Partnership requests and collaboration |
 | Document service | http://localhost:8083/api/v1 | Document uploads and downloads |
+| SOAP partnerships service | http://localhost:9090/partnership | SOAP 1.2 partnership web service (WSDL at `?wsdl`) |
 | PostgreSQL | localhost:5432 | Shared database |
 | Garage | http://localhost:3900 / http://localhost:3903 | S3 API / admin API |
 | Mailpit | http://localhost:8025 | Development email inbox; SMTP uses port 1025 |
@@ -53,13 +54,15 @@ Published backend ports bind to `127.0.0.1` by default. Change host ports in the
 | [services/auth-service/](services/auth-service/) | Account authentication and admin operations |
 | [services/user-service/](services/user-service/) | Profiles and dashboards |
 | [services/partnerships-service/](services/partnerships-service/) | Partnership API |
+| [services/soap-partnerships-service/](services/soap-partnerships-service/) | SOAP 1.2 partnership web service |
 | [services/document-service/](services/document-service/) | File API backed by Garage |
 | [infra/db/migrations/](infra/db/migrations/) | Shared PostgreSQL schema and reference data |
 | [infra/garage/](infra/garage/) | Garage configuration and bootstrap |
 | [tests/stack/](tests/stack/) | Isolated Stage 1 integration checks and fixtures |
 | [tests/postman/](tests/postman/) | Existing Postman/Newman collections |
+| [tests/soap/](tests/soap/) | SOAP test cases, runner, and guide (Bahasa Indonesia) |
 
-Docker builds use Go 1.26.3. PostgreSQL uses version 16, and Garage is pinned to version 2.0.0.
+Docker builds use Go 1.26.3 (the SOAP service uses 1.26.4). PostgreSQL uses version 16, and Garage is pinned to version 2.0.0.
 
 ## Test the local stack
 
@@ -67,7 +70,7 @@ Docker builds use Go 1.26.3. PostgreSQL uses version 16, and Garage is pinned to
 bash tests/stack/run.sh
 ```
 
-This builds a separate test project with six fixture accounts and one account registered by Newman, runs the API collection, checks all four services, uploads and downloads files through storage, reruns migrations and bootstrap, and recreates the containers to verify persistent data. It uses `.env.example` and the test overlay, publishes no host ports, and cleans up its test containers and volumes.
+This builds a separate test project with six fixture accounts and one account registered by Newman, runs the API collection, checks all five services (including the SOAP service), uploads and downloads files through storage, reruns migrations and bootstrap, and recreates the containers to verify persistent data. It uses `.env.example` and the test overlay, publishes no host ports, and cleans up its test containers and volumes.
 
 During the wrong-database check, this error is expected:
 
@@ -86,6 +89,14 @@ The test does not leave the development application running. Start it using the 
 The [Postman/Newman guide](tests/postman/README.md) documents the current contract suite, JUnit report, and archived collections. Passing Stage 1 confirms the local infrastructure and tested API flows; it does not validate every feature or authorization rule.
 
 The stack command also runs the Stage 2 authorization regressions. See the [authorization guide](docs/README_AUTHORIZATION.md) for role/ownership rules, test coverage, and current limitations.
+
+The SOAP partnership service has its own automated suite of 41 checks (happy path, state machine, faults, authentication, and database verification):
+
+```bash
+bash tests/soap/run-soap-tests.sh
+```
+
+See the [SOAP test guide](tests/soap/README.md) (Bahasa Indonesia) for prerequisites, options, findings, and the demo script.
 
 ## Frontend and CI checks
 
@@ -123,6 +134,7 @@ The optional large CSV seed replaces application data. It is unnecessary for sta
 | Frontend | [Read](frontend/README.md) | [Baca](frontend/README.id.md) |
 | Database | [Read](infra/db/README.md) | [Baca](infra/db/README.id.md) |
 | Postman/Newman | [Read](tests/postman/README.md) | [Baca](tests/postman/README.id.md) |
+| SOAP service tests & demo | — | [Baca](tests/soap/README.md) |
 | CSV seed notes | [Read](infra/db/dummy/seed-csv/README.txt) | [Baca](infra/db/dummy/seed-csv/README.id.txt) |
 
 Keep paired documentation consistent when changing commands, variables, or behavior. Command names, paths, API fields, and environment-variable names are identical in both languages. These language versions cover repository documentation.

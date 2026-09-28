@@ -2,7 +2,7 @@
 
 [English](README.md) | **Bahasa Indonesia**
 
-Platform untuk mengelola usaha mikro, kecil, dan menengah (UMKM), kerja sama mitra, dokumen, serta dasbor usaha. Frontend menggunakan React dan TypeScript; empat layanan Go berbagi basis data PostgreSQL. Garage menyediakan penyimpanan yang kompatibel dengan S3, sedangkan Mailpit menerima email selama pengembangan.
+Platform untuk mengelola usaha mikro, kecil, dan menengah (UMKM), kerja sama mitra, dokumen, serta dasbor usaha. Frontend menggunakan React dan TypeScript; lima layanan Go berbagi basis data PostgreSQL. Garage menyediakan penyimpanan yang kompatibel dengan S3, sedangkan Mailpit menerima email selama pengembangan.
 
 ## Menjalankan secara lokal
 
@@ -39,6 +39,7 @@ Lihat [panduan pengembangan lokal](docs/README_LOCAL_DEV.id.md) untuk variabel k
 | User service | http://localhost:8081/api/v1 | Profil dan dasbor |
 | Partnerships service | http://localhost:8082/api/v1 | Pengajuan dan pengelolaan kerja sama |
 | Document service | http://localhost:8083/api/v1 | Unggah dan unduh dokumen |
+| SOAP partnerships service | http://localhost:9090/partnership | Web service SOAP 1.2 untuk kerja sama (WSDL di `?wsdl`) |
 | PostgreSQL | localhost:5432 | Basis data bersama |
 | Garage | http://localhost:3900 / http://localhost:3903 | API S3 / API admin |
 | Mailpit | http://localhost:8025 | Kotak masuk email pengembangan; SMTP menggunakan port 1025 |
@@ -53,13 +54,15 @@ Port backend yang dipublikasikan hanya menerima koneksi melalui `127.0.0.1` seca
 | [services/auth-service/](services/auth-service/) | Autentikasi akun dan operasi admin |
 | [services/user-service/](services/user-service/) | Profil dan dasbor |
 | [services/partnerships-service/](services/partnerships-service/) | API kerja sama |
+| [services/soap-partnerships-service/](services/soap-partnerships-service/) | Web service SOAP 1.2 kerja sama |
 | [services/document-service/](services/document-service/) | API berkas dengan penyimpanan Garage |
 | [infra/db/migrations/](infra/db/migrations/) | Skema PostgreSQL bersama dan data referensi |
 | [infra/garage/](infra/garage/) | Konfigurasi dan penyiapan awal Garage |
 | [tests/stack/](tests/stack/) | Pengujian integrasi Stage 1 dan data uji terisolasi |
 | [tests/postman/](tests/postman/) | Koleksi Postman/Newman yang sudah ada |
+| [tests/soap/](tests/soap/) | Test case, skrip, dan panduan test SOAP |
 
-Proses build Docker menggunakan Go 1.26.3. PostgreSQL menggunakan versi 16, sedangkan Garage ditetapkan pada versi 2.0.0.
+Proses build Docker menggunakan Go 1.26.3 (layanan SOAP menggunakan 1.26.4). PostgreSQL menggunakan versi 16, sedangkan Garage ditetapkan pada versi 2.0.0.
 
 ## Menguji stack lokal
 
@@ -67,7 +70,7 @@ Proses build Docker menggunakan Go 1.26.3. PostgreSQL menggunakan versi 16, seda
 bash tests/stack/run.sh
 ```
 
-Skrip ini membangun proyek pengujian terpisah dengan enam akun fixture dan satu akun yang didaftarkan oleh Newman, menjalankan koleksi permintaan API, memeriksa keempat layanan, mengunggah dan mengunduh berkas melalui layanan penyimpanan, menjalankan ulang migrasi dan bootstrap, lalu membuat ulang container untuk memeriksa ketahanan data. Skrip menggunakan `.env.example` dan konfigurasi pengujian tambahan, tidak memublikasikan port host, serta membersihkan container dan volume pengujiannya.
+Skrip ini membangun proyek pengujian terpisah dengan enam akun fixture dan satu akun yang didaftarkan oleh Newman, menjalankan koleksi permintaan API, memeriksa kelima layanan (termasuk layanan SOAP), mengunggah dan mengunduh berkas melalui layanan penyimpanan, menjalankan ulang migrasi dan bootstrap, lalu membuat ulang container untuk memeriksa ketahanan data. Skrip menggunakan `.env.example` dan konfigurasi pengujian tambahan, tidak memublikasikan port host, serta membersihkan container dan volume pengujiannya.
 
 Pada pemeriksaan basis data yang salah, pesan berikut memang diharapkan:
 
@@ -86,6 +89,14 @@ Pengujian tidak membiarkan aplikasi pengembangan tetap berjalan. Jalankan aplika
 [Panduan Postman/Newman](tests/postman/README.id.md) menjelaskan suite kontrak API saat ini, laporan JUnit, dan koleksi arsip. Keberhasilan Stage 1 memastikan infrastruktur lokal dan alur API yang diuji berfungsi; hasil ini belum memvalidasi seluruh fitur atau aturan otorisasi.
 
 Perintah stack juga menjalankan regresi otorisasi Stage 2. Lihat [panduan otorisasi](docs/README_AUTHORIZATION.id.md) untuk aturan peran/kepemilikan, cakupan pengujian, dan batasan saat ini.
+
+Layanan SOAP kemitraan memiliki suite otomatis tersendiri berisi 41 pemeriksaan (jalur normal, mesin status, fault, autentikasi, dan verifikasi database):
+
+```bash
+bash tests/soap/run-soap-tests.sh
+```
+
+Lihat [panduan test SOAP](tests/soap/README.md) untuk prasyarat, opsi, temuan, skenario demo, dan checklist screenshot.
 
 ## Pemeriksaan frontend dan CI
 
@@ -123,6 +134,7 @@ Seed CSV berukuran besar bersifat opsional dan mengganti data aplikasi. Seed ini
 | Frontend | [Read](frontend/README.md) | [Baca](frontend/README.id.md) |
 | Basis data | [Read](infra/db/README.md) | [Baca](infra/db/README.id.md) |
 | Postman/Newman | [Read](tests/postman/README.md) | [Baca](tests/postman/README.id.md) |
+| Test SOAP service & demo | — | [Baca](tests/soap/README.md) |
 | Catatan seed CSV | [Read](infra/db/dummy/seed-csv/README.txt) | [Baca](infra/db/dummy/seed-csv/README.id.txt) |
 
 Perbarui kedua versi bahasa ketika mengubah perintah, variabel, atau perilaku aplikasi. Nama perintah, lokasi berkas, field API, dan nama variabel lingkungan tetap sama pada kedua bahasa. Pilihan bahasa ini berlaku untuk dokumentasi repositori.
