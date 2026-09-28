@@ -114,7 +114,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        service: [partnerships-service]
+        service: [partnerships-service, soap-partnerships-service]
     defaults:
       run:
         working-directory: services/${{ matrix.service }}
@@ -124,7 +124,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
-          go-version-file: services/partnerships-service/go.mod
+          go-version-file: services/${{ matrix.service }}/go.mod
           cache-dependency-path: services/${{ matrix.service }}/go.sum
       - name: Download Go dependencies
         run: go mod download
