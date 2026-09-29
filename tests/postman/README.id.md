@@ -2,7 +2,7 @@
 
 [English](README.md) | **Bahasa Indonesia**
 
-Koleksi otomatis yang digunakan adalah `umkm-tumbuh-current-progress.postman_collection.json`. Sebanyak 37 permintaan mencakup kondisi auth/user, registrasi, verifikasi email, login akun menunggu dan disetujui, tinjauan admin, profil, produk, stok, penjualan, dasbor, serta beberapa kasus penolakan.
+Koleksi otomatis yang digunakan adalah `umkm-tumbuh-current-progress.postman_collection.json`. Sebanyak 46 permintaan mencakup kondisi auth/user, registrasi, verifikasi email, login akun menunggu dan disetujui, tinjauan admin, profil, dasbor, beberapa kasus penolakan, serta pemeriksaan API REST kemitraan yang bersifat baca-saja (login, daftar pengajuan keluar/masuk, ringkasan, direktori UMKM dan mitra, serta pemeriksaan peran).
 
 ## Menjalankan suite terisolasi
 

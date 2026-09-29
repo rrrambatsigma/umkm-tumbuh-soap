@@ -86,7 +86,7 @@ Skrip membuat proyek Compose dengan nama unik, tidak memublikasikan port host, d
 
 - Kondisi kelima API dan koneksi basis data pada layanan yang menyediakan pemeriksaan tersebut.
 - Pengisian data uji dua kali serta login dengan peran dan status registrasi yang sesuai.
-- Koleksi Newman berisi 37 permintaan: verifikasi email, login akun menunggu/disetujui, tinjauan admin, profil, produk, penjualan, dasbor, dan beberapa permintaan yang harus ditolak.
+- Koleksi Newman berisi 46 permintaan: verifikasi email, login akun menunggu/disetujui, tinjauan admin, profil, dasbor, beberapa permintaan yang harus ditolak, serta pemeriksaan baca-saja atas API REST kemitraan.
 - Unggah dan unduh gambar produk melalui user-service.
 - Unggah dan unduh dokumen melalui document-service, termasuk penggunaan nama bucket khusus.
 - Pengulangan migrasi dan bootstrap tanpa mengganti key aplikasi atau menghapus key lain.
@@ -108,6 +108,7 @@ Pesan `INSERT 0 0` saat pengisian ulang berarti baris data uji yang sudah ada di
 
 ```text
 Stage 1 stack checks passed.
+Stage 2 authorization checks passed.
 ```
 
 Status `Exited` normal untuk migrasi, seed, dan bootstrap yang sudah selesai dengan sukses. Penghapusan container dan volume pada akhir log merupakan pembersihan pengujian. Setelah itu, aplikasi pengembangan tidak berjalan kecuali sebelumnya dijalankan secara terpisah. Gunakan perintah startup pada awal panduan ini, lalu jalankan frontend di terminal lain.

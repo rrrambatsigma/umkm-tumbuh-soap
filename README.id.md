@@ -82,6 +82,7 @@ Pengujian yang berhasil diakhiri dengan:
 
 ```text
 Stage 1 stack checks passed.
+Stage 2 authorization checks passed.
 ```
 
 Pengujian tidak membiarkan aplikasi pengembangan tetap berjalan. Jalankan aplikasi dengan perintah startup di atas. Seluruh akun uji bersifat sementara; gunakan akun admin bawaan atau lakukan registrasi pada aplikasi biasa. Penjelasan lengkap tersedia pada [panduan data uji dan pengujian](docs/README_LOCAL_DEV.id.md#menjalankan-pengujian-stage-1-terisolasi).

@@ -82,6 +82,7 @@ A successful run ends with:
 
 ```text
 Stage 1 stack checks passed.
+Stage 2 authorization checks passed.
 ```
 
 The test does not leave the development application running. Start it using the commands above. All test accounts are temporary; use the admin seed or register accounts in the normal application. Read the [fixture and test guide](docs/README_LOCAL_DEV.md#run-the-isolated-stage-1-check) for details.

@@ -10,6 +10,7 @@ export default defineConfig(({ command, mode, isPreview }) => {
     "USER_SERVICE_PORT",
     "PARTNERSHIP_SERVICE_PORT",
     "DOCUMENT_SERVICE_PORT",
+    "SOAP_SERVICE_PORT",
   ]);
   const useDevProxy = command === "serve" && !isPreview &&
     frontendEnv.VITE_USE_DEV_PROXY === "true";
@@ -19,6 +20,7 @@ export default defineConfig(({ command, mode, isPreview }) => {
     user: `http://127.0.0.1:${backendEnv.USER_SERVICE_PORT || "8081"}`,
     partnership: `http://127.0.0.1:${backendEnv.PARTNERSHIP_SERVICE_PORT || "8082"}`,
     document: `http://127.0.0.1:${backendEnv.DOCUMENT_SERVICE_PORT || "8083"}`,
+    soap: `http://127.0.0.1:${backendEnv.SOAP_SERVICE_PORT || "9090"}`,
   };
   const apiServices = {
     VITE_AUTH_API_BASE_URL: "auth",
@@ -61,10 +63,18 @@ export default defineConfig(({ command, mode, isPreview }) => {
     plugins: [tailwindcss(), react()],
     // Build produksi tetap memakai URL eksplisit dari lingkungan deployment.
     define: useDevProxy
-      ? Object.fromEntries(Object.entries(apiServices).map(([variable, service]) => [
-          `import.meta.env.${variable}`,
-          JSON.stringify(`/backend/${service}/api/v1`),
-        ]))
+      ? {
+          ...Object.fromEntries(
+            Object.entries(apiServices).map(([variable, service]) => [
+              `import.meta.env.${variable}`,
+              JSON.stringify(`/backend/${service}/api/v1`),
+            ]),
+          ),
+          // SOAP memakai satu titik masuk POST /partnership, bukan /api/v1.
+          "import.meta.env.VITE_SOAP_API_BASE_URL": JSON.stringify(
+            "/backend/soap/partnership",
+          ),
+        }
       : undefined,
     resolve: {
       alias: {

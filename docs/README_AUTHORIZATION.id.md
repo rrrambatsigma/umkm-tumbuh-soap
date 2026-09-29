@@ -57,7 +57,7 @@ Dari direktori utama repositori:
 bash tests/stack/run.sh
 ```
 
-Perintah ini membangun kelima layanan, menjalankan suite Newman yang berisi 37 request, menjalankan `tests/stack/authorization.py` terhadap layanan sebenarnya, lalu mengulangi pemeriksaan penyimpanan/persistensi Stage 1. Basis data dan volume pengujian bersifat sementara, tanpa port yang dipublikasikan ke host. Go dan Newman tidak perlu dipasang pada host.
+Perintah ini membangun kelima layanan, menjalankan suite Newman yang berisi 46 request, menjalankan `tests/stack/authorization.py` terhadap layanan sebenarnya, lalu mengulangi pemeriksaan penyimpanan/persistensi Stage 1. Basis data dan volume pengujian bersifat sementara, tanpa port yang dipublikasikan ke host. Go dan Newman tidak perlu dipasang pada host.
 
 Pengujian otorisasi memeriksa alur yang diizinkan serta token palsu/kedaluwarsa, pemalsuan peran, pengelolaan oleh non-admin, akses lintas akun, referensi dokumen milik pihak lain, serta keputusan kemitraan pada status tertutup atau yang diulang. Pengujian membuat pelatihan, pendaftaran, sertifikat, upload, dan pengajuannya sendiri. Enam akun uji semula tetap menjadi dasar identitas.
 

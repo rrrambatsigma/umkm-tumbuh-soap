@@ -1091,6 +1091,778 @@
                                                                        "type":  "text/javascript",
                                                                        "exec":  [
                                                                                     "pm.test(\u0027Request without token is rejected\u0027, () =\u003e pm.expect([401,403]).to.include(pm.response.code));",
+                                                                                     "pm.response.to.be.json;"
+                                                                                 ]
+                                                                    }
+                                                    }
+                                                ]
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "08 - Partnerships REST (read-only)",
+                     "description":  "Read-only contract checks for partnerships-service (:8082). No mutating request is issued here so the Stage 2 authorization suite keeps a clean data set.",
+                     "item":  [
+                                  {
+                                      "name":  "PT-HP-001 Partnerships service health",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [],
+                                                      "url":  {
+                                                                  "raw":  "{{partnership_base_url}}/health",
+                                                                  "host":  [
+                                                                               "{{partnership_base_url}}/health"
+                                                                           ]
+                                                              }
+                                                  },
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Status code is 200\u0027, () =\u003e pm.response.to.have.status(200));",
+                                                                                    "pm.test(\u0027Response is JSON\u0027, function () { pm.response.to.be.json; });",
+                                                                                    "const json = pm.response.json();",
+                                                                                    "pm.test(\u0027status is ok\u0027, () =\u003e pm.expect(json.status).to.eql(\u0027ok\u0027));"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "name":  "PT-AUTH-001 UMKM login for partnerships",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{auth_base_url}}/api/v1/auth/login",
+                                                                  "host":  [
+                                                                               "{{auth_base_url}}/api/v1/auth/login"
+                                                                           ]
+                                                              },
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"email\": \"{{umkm_email}}\",\n  \"password\": \"{{umkm_password}}\"\n}",
+                                                                   "options":  {
+                                                                                   "raw":  {
+                                                                                               "language":  "json"
+                                                                                           }
+                                                                               }
+                                                               }
+                                                  },
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027UMKM login returns 200\u0027, () =\u003e pm.response.to.have.status(200));",
+                                                                                    "pm.response.to.be.json;",
+                                                                                    "const json = pm.response.json();",
+                                                                                    "pm.expect(json.access_token, \u0027access_token\u0027).to.be.a(\u0027string\u0027).and.not.empty;",
+                                                                                    "pm.environment.set(\u0027partnership_umkm_token\u0027, json.access_token);",
+                                                                                    "pm.test(\u0027Role is UMKM\u0027, () =\u003e pm.expect(json.user.role).to.eql(\u0027UMKM\u0027));"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "name":  "PT-AUTH-002 Mitra login for partnerships",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{auth_base_url}}/api/v1/auth/login",
+                                                                  "host":  [
+                                                                               "{{auth_base_url}}/api/v1/auth/login"
+                                                                           ]
+                                                              },
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"email\": \"{{mitra_email}}\",\n  \"password\": \"{{mitra_password}}\"\n}",
+                                                                   "options":  {
+                                                                                   "raw":  {
+                                                                                               "language":  "json"
+                                                                                           }
+                                                                               }
+                                                               }
+                                                  },
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Mitra login returns 200\u0027, () =\u003e pm.response.to.have.status(200));",
+                                                                                    "pm.response.to.be.json;",
+                                                                                    "const json = pm.response.json();",
+                                                                                    "pm.expect(json.access_token, \u0027access_token\u0027).to.be.a(\u0027string\u0027).and.not.empty;",
+                                                                                    "pm.environment.set(\u0027partnership_mitra_token\u0027, json.access_token);",
+                                                                                    "pm.test(\u0027Role is MITRA\u0027, () =\u003e pm.expect(json.user.role).to.eql(\u0027MITRA\u0027));"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "name":  "PT-READ-001 Sent partnerships list",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{partnership_umkm_token}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{partnership_base_url}}/api/v1/partnerships/status?page=1&limit=10",
+                                                                  "host":  [
+                                                                               "{{partnership_base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "api",
+                                                                               "v1",
+                                                                               "partnerships",
+                                                                               "status"
+                                                                           ],
+                                                                  "query":  [
+                                                                                {
+                                                                                    "key":  "page",
+                                                                                    "value":  "1"
+                                                                                },
+                                                                                {
+                                                                                    "key":  "limit",
+                                                                                    "value":  "10"
+                                                                                }
+                                                                            ]
+                                                              }
+                                                  },
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Status code is 200\u0027, () =\u003e pm.response.to.have.status(200));",
+                                                                                    "pm.response.to.be.json;",
+                                                                                    "const json = pm.response.json();",
+                                                                                    "pm.test(\u0027success flag is true\u0027, () =\u003e pm.expect(json.success).to.eql(true));",
+                                                                                    "pm.test(\u0027pagination.total is a number\u0027, () =\u003e pm.expect(json.data.pagination.total).to.be.a(\u0027number\u0027));",
+                                                                                    "pm.test(\u0027pengajuan key is present\u0027, () =\u003e pm.expect(json.data).to.have.property(\u0027pengajuan\u0027));",
+                                                                                    "pm.test(\u0027echoed paging matches the request\u0027, () =\u003e pm.expect(json.data.pagination.page).to.eql(1));"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "name":  "PT-READ-002 Sent list filtered by status",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{partnership_umkm_token}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{partnership_base_url}}/api/v1/partnerships/status?status=DIAJUKAN",
+                                                                  "host":  [
+                                                                               "{{partnership_base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "api",
+                                                                               "v1",
+                                                                               "partnerships",
+                                                                               "status"
+                                                                           ],
+                                                                  "query":  [
+                                                                                {
+                                                                                    "key":  "status",
+                                                                                    "value":  "DIAJUKAN"
+                                                                                }
+                                                                            ]
+                                                              }
+                                                  },
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Status code is 200\u0027, () =\u003e pm.response.to.have.status(200));",
+                                                                                    "pm.response.to.be.json;",
+                                                                                    "const json = pm.response.json();",
+                                                                                    "const rows = json.data.pengajuan || [];",
+                                                                                    "pm.test(\u0027every row is DIAJUKAN\u0027, () =\u003e rows.forEach((row) =\u003e pm.expect(row.statusPengajuan).to.eql(\u0027DIAJUKAN\u0027)));"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "name":  "PT-READ-003 Unknown status filter returns empty list",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{partnership_umkm_token}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{partnership_base_url}}/api/v1/partnerships/status?status=APPROVED",
+                                                                  "host":  [
+                                                                               "{{partnership_base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "api",
+                                                                               "v1",
+                                                                               "partnerships",
+                                                                               "status"
+                                                                           ],
+                                                                  "query":  [
+                                                                                {
+                                                                                    "key":  "status",
+                                                                                    "value":  "APPROVED"
+                                                                                }
+                                                                            ]
+                                                              }
+                                                  },
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027REST answers 200 instead of 400\u0027, () =\u003e pm.response.to.have.status(200));",
+                                                                                    "pm.response.to.be.json;",
+                                                                                    "const json = pm.response.json();",
+                                                                                    "pm.test(\u0027unknown filter matches nothing\u0027, () =\u003e pm.expect(json.data.pagination.total).to.eql(0));"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "name":  "PT-READ-004 Outgoing summary",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{partnership_umkm_token}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{partnership_base_url}}/api/v1/partnerships/summary",
+                                                                  "host":  [
+                                                                               "{{partnership_base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "api",
+                                                                               "v1",
+                                                                               "partnerships",
+                                                                               "summary"
+                                                                           ]
+                                                              }
+                                                  },
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Status code is 200\u0027, () =\u003e pm.response.to.have.status(200));",
+                                                                                    "pm.response.to.be.json;",
+                                                                                    "const json = pm.response.json();",
+                                                                                    "for (const key of [\u0027bermitra\u0027, \u0027menunggu\u0027, \u0027ditolak\u0027]) {",
+                                                                                    "  pm.test(\u0027summary.\u0027 + key + \u0027 is a number\u0027, () =\u003e pm.expect(json.data.summary[key]).to.be.a(\u0027number\u0027));",
+                                                                                    "}"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "name":  "PT-READ-005 Incoming partnerships list",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{partnership_mitra_token}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{partnership_base_url}}/api/v1/partnerships/incoming?page=1&limit=10",
+                                                                  "host":  [
+                                                                               "{{partnership_base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "api",
+                                                                               "v1",
+                                                                               "partnerships",
+                                                                               "incoming"
+                                                                           ],
+                                                                  "query":  [
+                                                                                {
+                                                                                    "key":  "page",
+                                                                                    "value":  "1"
+                                                                                },
+                                                                                {
+                                                                                    "key":  "limit",
+                                                                                    "value":  "10"
+                                                                                }
+                                                                            ]
+                                                              }
+                                                  },
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Status code is 200\u0027, () =\u003e pm.response.to.have.status(200));",
+                                                                                    "pm.response.to.be.json;",
+                                                                                    "const json = pm.response.json();",
+                                                                                    "pm.test(\u0027success flag is true\u0027, () =\u003e pm.expect(json.success).to.eql(true));",
+                                                                                    "pm.test(\u0027pengajuan_masuk key is present\u0027, () =\u003e pm.expect(json.data).to.have.property(\u0027pengajuan_masuk\u0027));",
+                                                                                    "pm.test(\u0027pagination.total is a number\u0027, () =\u003e pm.expect(json.data.pagination.total).to.be.a(\u0027number\u0027));"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "name":  "PT-READ-006 Incoming summary",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{partnership_mitra_token}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{partnership_base_url}}/api/v1/partnerships/incoming/summary",
+                                                                  "host":  [
+                                                                               "{{partnership_base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "api",
+                                                                               "v1",
+                                                                               "partnerships",
+                                                                               "incoming",
+                                                                               "summary"
+                                                                           ]
+                                                              }
+                                                  },
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Status code is 200\u0027, () =\u003e pm.response.to.have.status(200));",
+                                                                                    "pm.response.to.be.json;",
+                                                                                    "const json = pm.response.json();",
+                                                                                    "for (const key of [\u0027menunggu\u0027, \u0027disetujui\u0027, \u0027ditolak\u0027, \u0027dibatalkan\u0027, \u0027total\u0027]) {",
+                                                                                    "  pm.test(\u0027summary.\u0027 + key + \u0027 is a number\u0027, () =\u003e pm.expect(json.data.summary[key]).to.be.a(\u0027number\u0027));",
+                                                                                    "}"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "name":  "PT-READ-007 Partnership detail not found",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{partnership_umkm_token}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{partnership_base_url}}/api/v1/partnerships/PGJ999999",
+                                                                  "host":  [
+                                                                               "{{partnership_base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "api",
+                                                                               "v1",
+                                                                               "partnerships",
+                                                                               "PGJ999999"
+                                                                           ]
+                                                              }
+                                                  },
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Status code is 404\u0027, () =\u003e pm.response.to.have.status(404));",
+                                                                                    "pm.response.to.be.json;",
+                                                                                    "const json = pm.response.json();",
+                                                                                    "pm.test(\u0027success flag is false\u0027, () =\u003e pm.expect(json.success).to.eql(false));"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "name":  "PT-SEC-001 Request without token is rejected",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [],
+                                                      "url":  {
+                                                                  "raw":  "{{partnership_base_url}}/api/v1/partnerships/status",
+                                                                  "host":  [
+                                                                               "{{partnership_base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "api",
+                                                                               "v1",
+                                                                               "partnerships",
+                                                                               "status"
+                                                                           ]
+                                                              }
+                                                  },
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Status code is 401\u0027, () =\u003e pm.response.to.have.status(401));",
+                                                                                    "pm.response.to.be.json;"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "name":  "PT-SEC-002 UMKM token cannot read the mitra directory",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{partnership_umkm_token}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{partnership_base_url}}/api/v1/umkm",
+                                                                  "host":  [
+                                                                               "{{partnership_base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "api",
+                                                                               "v1",
+                                                                               "umkm"
+                                                                           ]
+                                                              }
+                                                  },
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Status code is 403\u0027, () =\u003e pm.response.to.have.status(403));",
+                                                                                    "pm.response.to.be.json;"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "name":  "PT-SEC-003 Mitra token cannot read the mitra directory",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{partnership_mitra_token}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{partnership_base_url}}/api/v1/mitra",
+                                                                  "host":  [
+                                                                               "{{partnership_base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "api",
+                                                                               "v1",
+                                                                               "mitra"
+                                                                           ]
+                                                              }
+                                                  },
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Status code is 403\u0027, () =\u003e pm.response.to.have.status(403));",
+                                                                                    "pm.response.to.be.json;"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "name":  "PT-READ-008 UMKM directory with clamped limit",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{partnership_mitra_token}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{partnership_base_url}}/api/v1/umkm?limit=999",
+                                                                  "host":  [
+                                                                               "{{partnership_base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "api",
+                                                                               "v1",
+                                                                               "umkm"
+                                                                           ],
+                                                                  "query":  [
+                                                                                {
+                                                                                    "key":  "limit",
+                                                                                    "value":  "999"
+                                                                                }
+                                                                            ]
+                                                              }
+                                                  },
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Status code is 200\u0027, () =\u003e pm.response.to.have.status(200));",
+                                                                                    "pm.response.to.be.json;",
+                                                                                    "const json = pm.response.json();",
+                                                                                    "pm.test(\u0027limit is clamped to 50\u0027, () =\u003e pm.expect(json.data.pagination.limit).to.eql(50));",
+                                                                                    "pm.test(\u0027umkm list is not empty\u0027, () =\u003e pm.expect(json.data.umkm).to.be.an(\u0027array\u0027).that.is.not.empty);",
+                                                                                    "pm.environment.set(\u0027umkm_sample_id\u0027, json.data.umkm[0].id);"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "name":  "PT-READ-009 UMKM detail",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{partnership_mitra_token}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{partnership_base_url}}/api/v1/umkm/{{umkm_sample_id}}",
+                                                                  "host":  [
+                                                                               "{{partnership_base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "api",
+                                                                               "v1",
+                                                                               "umkm",
+                                                                               "{{umkm_sample_id}}"
+                                                                           ]
+                                                              }
+                                                  },
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Status code is 200\u0027, () =\u003e pm.response.to.have.status(200));",
+                                                                                    "pm.response.to.be.json;",
+                                                                                    "const json = pm.response.json();",
+                                                                                    "pm.test(\u0027detail id matches the list\u0027, () =\u003e pm.expect(json.data.umkm.id).to.eql(pm.environment.get(\u0027umkm_sample_id\u0027)));",
+                                                                                    "pm.test(\u0027name is not empty\u0027, () =\u003e pm.expect(json.data.umkm.name).to.be.a(\u0027string\u0027).and.not.empty);"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "name":  "PT-READ-010 Unknown UMKM detail",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{partnership_mitra_token}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{partnership_base_url}}/api/v1/umkm/TEST_UNKNOWN_UMKM",
+                                                                  "host":  [
+                                                                               "{{partnership_base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "api",
+                                                                               "v1",
+                                                                               "umkm",
+                                                                               "TEST_UNKNOWN_UMKM"
+                                                                           ]
+                                                              }
+                                                  },
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Status code is 404\u0027, () =\u003e pm.response.to.have.status(404));",
+                                                                                    "pm.response.to.be.json;"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "name":  "PT-READ-011 Mitra directory",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{partnership_umkm_token}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{partnership_base_url}}/api/v1/mitra?q=&limit=10",
+                                                                  "host":  [
+                                                                               "{{partnership_base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "api",
+                                                                               "v1",
+                                                                               "mitra"
+                                                                           ],
+                                                                  "query":  [
+                                                                                {
+                                                                                    "key":  "q",
+                                                                                    "value":  ""
+                                                                                },
+                                                                                {
+                                                                                    "key":  "limit",
+                                                                                    "value":  "10"
+                                                                                }
+                                                                            ]
+                                                              }
+                                                  },
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Status code is 200\u0027, () =\u003e pm.response.to.have.status(200));",
+                                                                                    "pm.response.to.be.json;",
+                                                                                    "const json = pm.response.json();",
+                                                                                    "pm.test(\u0027mitra list is not empty\u0027, () =\u003e pm.expect(json.data.mitra).to.be.an(\u0027array\u0027).that.is.not.empty);",
+                                                                                    "pm.environment.set(\u0027mitra_sample_id\u0027, json.data.mitra[0].id);"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "name":  "PT-READ-012 Mitra detail",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{partnership_umkm_token}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{partnership_base_url}}/api/v1/mitra/{{mitra_sample_id}}",
+                                                                  "host":  [
+                                                                               "{{partnership_base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "api",
+                                                                               "v1",
+                                                                               "mitra",
+                                                                               "{{mitra_sample_id}}"
+                                                                           ]
+                                                              }
+                                                  },
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Status code is 200\u0027, () =\u003e pm.response.to.have.status(200));",
+                                                                                    "pm.response.to.be.json;",
+                                                                                    "const json = pm.response.json();",
+                                                                                    "pm.test(\u0027detail id matches the list\u0027, () =\u003e pm.expect(json.data.mitra.id).to.eql(pm.environment.get(\u0027mitra_sample_id\u0027)));",
+                                                                                    "pm.test(\u0027name is not empty\u0027, () =\u003e pm.expect(json.data.mitra.name).to.be.a(\u0027string\u0027).and.not.empty);"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "name":  "PT-READ-013 Unknown mitra detail",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{partnership_umkm_token}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{partnership_base_url}}/api/v1/mitra/TEST_UNKNOWN_MITRA",
+                                                                  "host":  [
+                                                                               "{{partnership_base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "api",
+                                                                               "v1",
+                                                                               "mitra",
+                                                                               "TEST_UNKNOWN_MITRA"
+                                                                           ]
+                                                              }
+                                                  },
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Status code is 404\u0027, () =\u003e pm.response.to.have.status(404));",
                                                                                     "pm.response.to.be.json;"
                                                                                 ]
                                                                    }

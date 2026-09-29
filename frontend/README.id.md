@@ -74,7 +74,7 @@ Jalankan di dalam `frontend/`:
 
 Jalankan `npm run build` sebelum preview. Preview biasanya menggunakan port 4173; permintaan ke backend tetap memerlukan `FRONTEND_URL` yang sesuai. Preview tidak menjalankan backend.
 
-`npm run check` menjalankan pemeriksaan frontend yang sama dengan job frontend di CI. Pengujian memakai server HTTP lokal dan data sintetis. Suite `test:pages` memakai React test renderer yang versinya sesuai React 18; suite ini memeriksa perubahan state dan interaksi komponen tanpa browser atau Docker. Berkas uji skema lama pada `src/**/__tests__` belum termasuk perintah ini.
+`npm run check` menjalankan pemeriksaan frontend yang sama dengan job frontend di CI. Pengujian memakai server HTTP lokal dan data sintetis. Suite `test:pages` memuat modul frontend melalui loader SSR Vite dan memeriksa penanganan request/response serta jalur galat tanpa browser atau Docker; suite ini tidak me-render komponen React. Berkas uji skema lama pada `src/**/__tests__` belum termasuk perintah ini.
 
 ## Akun dan pengujian
 

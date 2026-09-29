@@ -86,7 +86,7 @@ The script creates a unique Compose project, publishes no host ports, and uses a
 
 - Health of all five APIs and database connectivity where available.
 - Fixture seeding twice and login with the expected roles and registration states.
-- The 37-request Newman collection: email verification, pending/approved login, admin review, profiles, products, sales, dashboards, and selected rejected requests.
+- The 46-request Newman collection: email verification, pending/approved login, admin review, profiles, dashboards, selected rejected requests, and a read-only pass over the partnerships REST API.
 - Product image upload/download through user-service.
 - Document upload/download through document-service, including custom bucket names.
 - Migration and bootstrap reruns without rotating the application key or deleting an unrelated key.
@@ -108,6 +108,7 @@ ERROR:  Fixtures require the isolated umkm_tumbuh_test database
 
 ```text
 Stage 1 stack checks passed.
+Stage 2 authorization checks passed.
 ```
 
 `Exited` is normal for migrations, seeding, and bootstrap after they finish successfully. The final container and volume removals are test cleanup. The development app is not running afterward unless you started it separately. Use the startup commands at the beginning of this guide, then run the frontend in another terminal.

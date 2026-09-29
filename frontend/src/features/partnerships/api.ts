@@ -1,7 +1,10 @@
 // frontend/src/features/partnerships/api.ts
 
+import { getPartnershipTransport } from "../../shared/api/transport";
 import { httpPartnerships } from "../../shared/api/partnershipHttp";
 import { getAccessToken } from "../../shared/auth/currentUser";
+import * as soapApi from "./soapApi";
+import { normalizeStatusFilter } from "./statusFilter";
 import type { CreatePartnershipRequest, PartnershipStatus } from "./types";
 
 interface BackendResponse<T> {
@@ -39,6 +42,8 @@ export interface PartnershipStatusResponse {
     tanggalPengajuan: string;
     mitraUmkmTujuan: string;
     proposalTitle?: string;
+    mitraUmkmUsaha?: string;
+    pengirim?: string;
   }>;
   pagination: {
     page: number;
@@ -135,6 +140,11 @@ export interface MitraDetail {
 export const partnershipsApi = {
   // POST /api/v1/partnerships
   create: async (data: CreatePartnershipRequest): Promise<BackendResponse<{ pengajuanID: string }>> => {
+    // Mode SOAP tidak menerima lampiran, jadi attachment_files tidak dikirim.
+    if (getPartnershipTransport() === "soap") {
+      return soapApi.create(data);
+    }
+
     console.log("[partnershipsApi.create] Request data:", JSON.stringify(data));
     const resp = await httpPartnerships.post<BackendResponse<{ pengajuanID: string }>>("/partnerships", data);
     console.log("[partnershipsApi.create] Raw response:", JSON.stringify(resp));
@@ -147,10 +157,15 @@ export const partnershipsApi = {
     limit?: number;
     status?: string;
   }): Promise<SuccessResponse<PartnershipStatusResponse>> => {
+    if (getPartnershipTransport() === "soap") {
+      return soapApi.getStatus(params);
+    }
+
     const queryParams = new URLSearchParams();
     if (params?.page) queryParams.append("page", params.page.toString());
     if (params?.limit) queryParams.append("limit", params.limit.toString());
-    if (params?.status) queryParams.append("status", params.status);
+    const status = normalizeStatusFilter(params?.status) ?? params?.status;
+    if (status) queryParams.append("status", status);
     
     const url = `/partnerships/status${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
     return httpPartnerships.get<SuccessResponse<PartnershipStatusResponse>>(url);
@@ -162,16 +177,25 @@ export const partnershipsApi = {
     limit?: number;
     status?: string;
   }): Promise<SuccessResponse<IncomingPartnershipsResponse>> => {
+    if (getPartnershipTransport() === "soap") {
+      return soapApi.getIncoming(params);
+    }
+
     const queryParams = new URLSearchParams();
     if (params?.page) queryParams.append("page", params.page.toString());
     if (params?.limit) queryParams.append("limit", params.limit.toString());
-    if (params?.status) queryParams.append("status", params.status);
+    const status = normalizeStatusFilter(params?.status) ?? params?.status;
+    if (status) queryParams.append("status", status);
     
     const url = `/partnerships/incoming${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
     return httpPartnerships.get<SuccessResponse<IncomingPartnershipsResponse>>(url);
   },
 
   getIncomingSummary: async (): Promise<SuccessResponse<IncomingPartnershipSummaryResponse>> => {
+    if (getPartnershipTransport() === "soap") {
+      return soapApi.getIncomingSummary();
+    }
+
     return httpPartnerships.get<SuccessResponse<IncomingPartnershipSummaryResponse>>(
       "/partnerships/incoming/summary",
     );
@@ -179,7 +203,10 @@ export const partnershipsApi = {
 
   // GET /api/v1/partnerships/{id}
   getDetail: async (id: string): Promise<SuccessResponse<Record<string, unknown>>> => {
-    const response = await httpPartnerships.get<SuccessResponse<Record<string, unknown>>>(`/partnerships/${id}`);
+    const response =
+      getPartnershipTransport() === "soap"
+        ? await soapApi.getDetail(id)
+        : await httpPartnerships.get<SuccessResponse<Record<string, unknown>>>(`/partnerships/${id}`);
     const raw = response.data;
     const maybePengajuan = raw?.pengajuan;
 
@@ -196,11 +223,19 @@ export const partnershipsApi = {
 
   // GET /api/v1/partnerships/summary
   getSummary: async (): Promise<SuccessResponse<{ summary: { bermitra: number; menunggu: number; ditolak: number } }>> => {
+    if (getPartnershipTransport() === "soap") {
+      return soapApi.getSummary();
+    }
+
     return httpPartnerships.get<SuccessResponse<{ summary: { bermitra: number; menunggu: number; ditolak: number } }>>("/partnerships/summary");
   },
 
   // POST /api/v1/partnerships/{id}/sign
   sign: async (id: string, dokumenKontrak: string): Promise<SuccessResponse<void>> => {
+    if (getPartnershipTransport() === "soap") {
+      return soapApi.sign(id, dokumenKontrak);
+    }
+
     return httpPartnerships.post<SuccessResponse<void>>(`/partnerships/${id}/sign`, {
       dokumen_kontrak: dokumenKontrak,
     });
@@ -208,16 +243,28 @@ export const partnershipsApi = {
 
   // PATCH /api/v1/partnerships/{id}/read
   markAsRead: async (id: string): Promise<SuccessResponse<void>> => {
+    if (getPartnershipTransport() === "soap") {
+      return soapApi.markAsRead(id);
+    }
+
     return httpPartnerships.patch<SuccessResponse<void>>(`/partnerships/${id}/read`, {});
   },
 
   // PATCH /api/v1/partnerships/{id}/approve
   approve: async (id: string): Promise<SuccessResponse<void>> => {
+    if (getPartnershipTransport() === "soap") {
+      return soapApi.approve(id);
+    }
+
     return httpPartnerships.patch<SuccessResponse<void>>(`/partnerships/${id}/approve`, {});
   },
 
   // PATCH /api/v1/partnerships/{id}/reject
   reject: async (id: string, rejection_reason: string): Promise<SuccessResponse<void>> => {
+    if (getPartnershipTransport() === "soap") {
+      return soapApi.reject(id, rejection_reason);
+    }
+
     return httpPartnerships.patch<SuccessResponse<void>>(`/partnerships/${id}/reject`, {
       rejection_reason: rejection_reason,
     });
@@ -225,6 +272,10 @@ export const partnershipsApi = {
 
   // PATCH /api/v1/partnerships/{id}/cancel
   cancel: async (id: string): Promise<SuccessResponse<void>> => {
+    if (getPartnershipTransport() === "soap") {
+      return soapApi.cancel(id);
+    }
+
     return httpPartnerships.patch<SuccessResponse<void>>(`/partnerships/${id}/cancel`, {});
   },
 

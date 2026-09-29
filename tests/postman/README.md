@@ -2,7 +2,7 @@
 
 **English** | [Bahasa Indonesia](README.id.md)
 
-The automated collection is `umkm-tumbuh-current-progress.postman_collection.json`. Its 37 requests cover auth/user health, registration, email verification, pending and approved login, admin review, profiles, products, stock, sales, dashboards, and selected rejection cases.
+The automated collection is `umkm-tumbuh-current-progress.postman_collection.json`. Its 46 requests cover auth/user health, registration, email verification, pending and approved login, admin review, profiles, dashboards, selected rejection cases, and a read-only pass over the partnerships REST API (login, sent and incoming listings, summaries, UMKM and mitra directories, and role checks).
 
 ## Run the isolated suite
 

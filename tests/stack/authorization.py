@@ -129,6 +129,69 @@ class AuthorizationTests(unittest.TestCase):
             request(other + "/" + operation, "PATCH", payload, self.tokens[account])
             self.assertEqual(request(other, token=self.tokens["umkm.a"])["data"]["pengajuan"]["status"], expected_status)
 
+    def test_incoming_listing_and_summary_scopes(self):
+        incoming = PARTNERSHIP + "/partnerships/incoming"
+        listing = request(incoming + "?page=1&limit=10", token=self.tokens["mitra.a"])
+        rows = listing["data"]["pengajuan_masuk"]
+        pagination = listing["data"]["pagination"]
+        self.assertGreaterEqual(pagination["total"], 1)
+        self.assertTrue(any(row["pengajuanID"] == self.partnership_id for row in rows))
+
+        filtered = request(incoming + "?status=DIAJUKAN", token=self.tokens["mitra.a"])
+        self.assertTrue(filtered["data"]["pengajuan_masuk"])
+        for row in filtered["data"]["pengajuan_masuk"]:
+            self.assertEqual(row["status"], "DIAJUKAN")
+
+        unknown = request(incoming + "?status=APPROVED", token=self.tokens["mitra.a"])
+        self.assertEqual(unknown["data"]["pagination"]["total"], 0)
+
+        others = request(incoming, token=self.tokens["mitra.b"])
+        self.assertNotIn(self.partnership_id,
+                         [row["pengajuanID"] for row in (others["data"]["pengajuan_masuk"] or [])])
+
+        request(incoming, expected=401)
+        request(incoming, token=self.tokens["admin"], expected=403)
+
+        summary = request(PARTNERSHIP + "/partnerships/incoming/summary",
+                          token=self.tokens["mitra.a"])["data"]["summary"]
+        self.assertEqual(set(summary), {"menunggu", "disetujui", "ditolak", "dibatalkan", "total"})
+        self.assertGreaterEqual(summary["menunggu"], 1)
+        self.assertGreaterEqual(summary["total"], summary["menunggu"])
+
+        mine = request(PARTNERSHIP + "/partnerships/incoming/summary",
+                       token=self.tokens["umkm.a"])["data"]["summary"]
+        self.assertEqual(mine["total"], 0)
+
+    def test_directory_detail_endpoints_role_and_not_found(self):
+        listing = request(PARTNERSHIP + "/umkm", token=self.tokens["mitra.a"])
+        umkm_rows = listing["data"]["umkm"]
+        self.assertTrue(umkm_rows)
+        umkm_id = umkm_rows[0]["id"]
+
+        clamped = request(PARTNERSHIP + "/umkm?limit=999", token=self.tokens["mitra.a"])
+        self.assertEqual(clamped["data"]["pagination"]["limit"], 50)
+
+        detail = request(PARTNERSHIP + "/umkm/" + umkm_id,
+                         token=self.tokens["mitra.a"])["data"]["umkm"]
+        self.assertEqual(detail["id"], umkm_id)
+        self.assertTrue(detail["name"])
+
+        request(PARTNERSHIP + "/umkm/TEST_UNKNOWN_UMKM", token=self.tokens["mitra.a"],
+                expected=404)
+        request(PARTNERSHIP + "/umkm/" + umkm_id, token=self.tokens["umkm.a"], expected=403)
+
+        mitra = request(PARTNERSHIP + "/mitra?limit=999&q=", token=self.tokens["umkm.a"])
+        self.assertEqual(mitra["data"]["pagination"]["limit"], 50)
+        partner = request(PARTNERSHIP + "/mitra/TEST_PARTNER_A",
+                          token=self.tokens["umkm.a"])["data"]["mitra"]
+        self.assertEqual(partner["name"], "Mitra Test A")
+        self.assertEqual(partner["contact_person"], "PIC Test A")
+
+        request(PARTNERSHIP + "/mitra/TEST_UNKNOWN_MITRA", token=self.tokens["umkm.a"],
+                expected=404)
+        request(PARTNERSHIP + "/mitra/TEST_PARTNER_A", token=self.tokens["mitra.a"],
+                expected=403)
+
     def test_foreign_attachment_does_not_create_a_partnership(self):
         token = self.tokens["umkm.a"]
         listing = PARTNERSHIP + "/partnerships/status"

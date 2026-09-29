@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Bell } from "lucide-react";
 import { getCurrentUser } from "../../../shared/auth/currentUser";
 import Sidebar from "../../../shared/components/Sidebar";
+import TransportToggle from "../../partnerships/components/TransportToggle";
 
 type UmkmLayoutProps = {
   children: React.ReactNode;
@@ -34,6 +35,8 @@ export default function UmkmLayout({ children, title, subtitle }: UmkmLayoutProp
           </div>
 
           <div className="umkm-topbar-right">
+            <TransportToggle />
+
             <button className="umkm-icon-btn" type="button" aria-label="Notifikasi">
               <Bell size={18} />
             </button>

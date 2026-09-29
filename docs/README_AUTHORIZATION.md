@@ -57,7 +57,7 @@ From the repository root:
 bash tests/stack/run.sh
 ```
 
-The command builds all five services, runs the existing 37-request Newman suite, runs `tests/stack/authorization.py` against the real services, and repeats the Stage 1 storage/persistence checks. Its database and volumes are disposable, and no host ports are published. Go and Newman are not required on the host.
+The command builds all five services, runs the existing 46-request Newman suite, runs `tests/stack/authorization.py` against the real services, and repeats the Stage 1 storage/persistence checks. Its database and volumes are disposable, and no host ports are published. Go and Newman are not required on the host.
 
 The authorization runner tests valid workflows as well as forged/expired tokens, role spoofing, non-admin management calls, cross-account access, foreign document references, and closed/replayed partnership decisions. It creates its own courses, enrollments, certificates, uploads, and proposals. The original six account fixtures remain the identity baseline.
 

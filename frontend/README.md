@@ -74,7 +74,7 @@ Run inside `frontend/`:
 
 Run `npm run build` before previewing. Preview commonly uses port 4173; backend requests still require a matching `FRONTEND_URL`. Preview does not start the backend.
 
-`npm run check` runs the same frontend checks as the frontend CI job. Tests use local HTTP servers and synthetic data. The `test:pages` suite uses a React test renderer matching React 18; it checks component state and interactions without a browser or Docker. Older schema test files under `src/**/__tests__` are not included in this command.
+`npm run check` runs the same frontend checks as the frontend CI job. Tests use local HTTP servers and synthetic data. The `test:pages` suite loads the frontend modules through Vite's SSR loader and checks request/response handling and error paths without a browser or Docker; it does not render React components. Older schema test files under `src/**/__tests__` are not included in this command.
 
 ## Accounts and testing
 
